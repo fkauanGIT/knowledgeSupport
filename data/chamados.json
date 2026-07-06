@@ -1,0 +1,212 @@
+[
+  {
+    "id": "CH0001",
+    "nomeErro": "",
+    "titulo": "Liberação de filial para vendedor José Maria",
+    "descricao": "José Maria estava sem conseguir vender para a filial 19.",
+    "responsavelChamado": "Gerente Shirley",
+    "filial": 19,
+    "categoria": "Permissões",
+    "rotinas": [
+      530
+    ],
+    "erroPodeSerAutomatizado": "NAO",
+    "dificuldade": "BAIXA",
+    "documentacao": "PRIVADO",
+    "tempoResolucao": "< 10 MIN",
+    "status": "RESOLVIDO",
+    "dataCriacao": "2026-07-06 10:00",
+    "dataLimite": "2026-07-06 16:00",
+    "sintomas": [
+      "Usuário sem conseguir vender",
+      "Sem acesso à filial 19"
+    ],
+    "causa": "Usuário não possuía permissão para vender na filial 19.",
+    "resolucao": [
+      "Abrir a rotina 530.",
+      "Localizar o usuário José Maria.",
+      "Liberar acesso para a filial 19.",
+      "Salvar as alterações."
+    ],
+    "resultado": "Usuário voltou a vender normalmente.",
+    "tags": [
+      "530",
+      "Permissão",
+      "Filial",
+      "Vendedor"
+    ],
+    "observacoes": ""
+  },
+  {
+    "id": "CH0002",
+    "nomeErro": "",
+    "titulo": "4136 e caixa sem aparecer as vendas",
+    "descricao": "As vendas não apareciam na rotina 4136 e, consequentemente, não apareciam no caixa.",
+    "responsavelChamado": "",
+    "filial": 4,
+    "categoria": "Caixa",
+    "rotinas": [
+      4136,
+      530
+    ],
+    "erroPodeSerAutomatizado": "NAO",
+    "dificuldade": "MEDIA",
+    "documentacao": "PRIVADO",
+    "tempoResolucao": "< 10 MIN",
+    "status": "RESOLVIDO",
+    "dataCriacao": "",
+    "dataLimite": "",
+    "sintomas": [
+      "4136 sem vendas",
+      "Caixa sem movimentação"
+    ],
+    "causa": "Gerente vinculada ao grupo incorreto.",
+    "resolucao": [
+      "Abrir a rotina 530.",
+      "Criar um novo grupo.",
+      "Retirar a gerente do grupo da filial 4.",
+      "Salvar as alterações.",
+      "Validar novamente a rotina 4136."
+    ],
+    "resultado": "As vendas voltaram a aparecer normalmente.",
+    "tags": [
+      "4136",
+      "530",
+      "Caixa",
+      "Grupo"
+    ],
+    "observacoes": ""
+  },
+  {
+    "id": "CH0003",
+    "nomeErro": "",
+    "titulo": "Liberação de desconto e perfil de usuário errado",
+    "descricao": "Usuário sem conseguir liberar desconto e acessar determinadas rotinas.",
+    "responsavelChamado": "Gerente Shirley",
+    "filial": 19,
+    "categoria": "Permissões",
+    "rotinas": [
+      528,
+      530,
+      4136
+    ],
+    "erroPodeSerAutomatizado": "NAO",
+    "dificuldade": "BAIXA",
+    "documentacao": "PRIVADO",
+    "tempoResolucao": "< 10 MIN",
+    "status": "RESOLVIDO",
+    "dataCriacao": "2026-07-06 10:20",
+    "dataLimite": "2026-07-06 16:00",
+    "sintomas": [
+      "Usuário sem conseguir liberar desconto",
+      "Sem acesso às rotinas"
+    ],
+    "causa": "Perfil do usuário configurado incorretamente.",
+    "resolucao": [
+      "Abrir a rotina 528.",
+      "Corrigir o perfil do usuário.",
+      "Validar a liberação de desconto.",
+      "Caso necessário, revisar também o grupo na rotina 530."
+    ],
+    "resultado": "Usuário voltou a acessar as rotinas e liberar descontos.",
+    "tags": [
+      "528",
+      "530",
+      "Perfil",
+      "Desconto",
+      "Permissões"
+    ],
+    "observacoes": ""
+  },
+  {
+    "id": "CH0004",
+    "nomeErro": "",
+    "titulo": "Sem conseguir alterar RCA na venda",
+    "descricao": "Não consigo alterar o vendedor na rotina 4116",
+    "responsavelChamado": "",
+    "filial": 8,
+    "categoria": "Caixa",
+    "rotinas": [
+      4116,
+      530
+    ],
+    "erroPodeSerAutomatizado": "NAO",
+    "dificuldade": "BAIXA",
+    "documentacao": "PRIVADO",
+    "tempoResolucao": "< 10 MIN",
+    "status": "RESOLVIDO",
+    "dataCriacao": "",
+    "dataLimite": "",
+    "sintomas": [
+      "4116 sem conseguir alterar"
+    ],
+    "causa": "Parâmetro na rotina 530 errado.",
+    "resolucao": [
+      "Abrir a rotina 530.",
+      "Ir na rotina 4116.",
+      "Alterar o parâmetro 29."
+    ],
+    "resultado": "Usuário conseguiu alterar.",
+    "tags": [
+      "4116"
+    ],
+    "observacoes": ""
+  },
+  {
+    "id": "CH0005",
+    "nomeErro": "Ocorreu um erro quando: ABRINDO ENTRADAS Erro Original: ORA-00932: tipos de dados inconsistentes: esperava - obteve -",
+    "titulo": "Erro na 2130",
+    "descricao": "Não estou conseguindo fazer a integração contabil com a 2130",
+    "responsavelChamado": "kauan",
+    "filial": 0,
+    "categoria": "Error",
+    "rotinas": [
+      2130,
+      2100
+    ],
+    "erroPodeSerAutomatizado": "NAO",
+    "dificuldade": "BAIXA",
+    "documentacao": "PRIVADO",
+    "tempoResolucao": "< 10 MIN",
+    "status": "RESOLVIDO",
+    "dataCriacao": "2026-07-06T16:53",
+    "dataLimite": "2026-07-07T16:53",
+    "sintomas": [],
+    "causa": "Faltava atualizar os dados na 2100",
+    "resolucao": [
+      "Acessei a 2100 e segui esse passo a passo:",
+      "https://centraldeatendimento.totvs.com/hc/pt-br/articles/360034394754-WINT-2130-mensagem-Ocorreu-um-erro-quando-ABRINDO-FATO-GERADOR-4-RECEBIMENTOS-E-ESTORNOS-DE-RECEBIMENTOS"
+    ],
+    "resultado": "Tudo corrigido",
+    "tags": [
+      "error",
+      "2100"
+    ],
+    "observacoes": ""
+  },
+  {
+    "id": "CH0006",
+    "nomeErro": "0",
+    "titulo": "vincular o e-mail de Anna Marya ao meu",
+    "descricao": "Consegue vincular o e-mail de Anna Marya ao meu, para que todas as mensagens que antes eram enviadas para ela passem a ser recebidas no meu e-mail?",
+    "responsavelChamado": "Kauan",
+    "filial": 52,
+    "categoria": "adequação",
+    "rotinas": [
+      0
+    ],
+    "erroPodeSerAutomatizado": "NAO",
+    "dificuldade": "BAIXA",
+    "documentacao": "PRIVADO",
+    "tempoResolucao": "",
+    "status": "ABERTO",
+    "dataCriacao": "2026-07-06T17:19",
+    "dataLimite": "2026-07-07T17:19",
+    "sintomas": [],
+    "causa": "",
+    "resolucao": [],
+    "resultado": "",
+    "tags": [],
+    "observacoes": ""
+  }
+]

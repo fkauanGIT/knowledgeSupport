@@ -1,0 +1,134 @@
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
+}
+
+.bolinha {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 50%;
+  background-color: #2563eb;
+  color: white;
+  font-size: 1.6rem;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.card-header {
+  -webkit-app-region: drag;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+
+.card-header-botoes {
+  -webkit-app-region: no-drag;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.card-header-botoes button {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.card-header-botoes button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.card-conteudo {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.chamado-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.chamado-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.chamado-form input,
+.chamado-form select,
+.chamado-form textarea {
+  font: inherit;
+  padding: 0.4rem;
+  border: 1px solid #999;
+  border-radius: 4px;
+}
+
+.chamado-form .linha {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chamado-form button {
+  align-self: flex-start;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chamado-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.chamado-list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.chamado-list th,
+.chamado-list td {
+  text-align: left;
+  padding: 0.4rem;
+  border-bottom: 1px solid #ddd;
+}
