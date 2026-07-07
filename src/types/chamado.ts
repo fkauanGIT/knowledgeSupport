@@ -25,6 +25,8 @@ export interface Chamado {
   resultado: string
   tags: string[]
   observacoes: string
+  documentoNome?: string
+  documentoLink?: string
 }
 
 export type NovoChamado = Omit<Chamado, 'id'>

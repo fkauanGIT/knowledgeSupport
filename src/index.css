@@ -65,10 +65,184 @@ body,
   background-color: rgba(255, 255, 255, 0.3);
 }
 
+.bolha-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+}
+
+.bolha-menu-item {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: #2563eb;
+  color: white;
+  font-size: 1.4rem;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.bolha-menu-item:hover {
+  background-color: #1d4ed8;
+}
+
+.bolha-fechar {
+  background-color: #475569;
+  font-size: 1.6rem;
+}
+
+.bolha-fechar:hover {
+  background-color: #334155;
+}
+
 .card-conteudo {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
+}
+
+.olho-de-deus-intro {
+  margin-top: 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.olho-de-deus-vazio {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.olho-de-deus-resultados {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.olho-de-deus-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.olho-de-deus-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background-color: #f1f5f9;
+}
+
+.olho-de-deus-card-header button {
+  border: none;
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  background-color: #2563eb;
+  color: white;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.olho-de-deus-resposta {
+  margin: 0;
+  padding: 0.75rem;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.olho-de-deus-passo-a-passo {
+  margin: 0.75rem 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background-color: #eff6ff;
+  font-size: 0.85rem;
+}
+
+.olho-de-deus-passo-a-passo ul {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.olho-de-deus-passo-a-passo li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.olho-de-deus-passo-a-passo li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.olho-de-deus-passo-a-passo button {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.55rem;
+  background-color: #2563eb;
+  color: white;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.olho-de-deus-recorrencia {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.olho-de-deus-doc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem 0.75rem;
+  border-top: 1px solid #eee;
+}
+
+.olho-de-deus-doc button {
+  border: none;
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  background-color: #e2e8f0;
+  color: #1e293b;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.olho-de-deus-doc button:hover {
+  background-color: #cbd5e1;
+}
+
+.olho-de-deus-link-form {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 100%;
+}
+
+.olho-de-deus-link-form input {
+  flex: 1;
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #999;
+  border-radius: 4px;
 }
 
 .chamado-form {

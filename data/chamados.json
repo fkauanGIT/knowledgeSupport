@@ -208,5 +208,34 @@
     "resultado": "",
     "tags": [],
     "observacoes": ""
+  },
+  {
+    "id": "CH0007",
+    "nomeErro": "SEM ERRO",
+    "titulo": "Tá constando que tá sem receita",
+    "descricao": "Tá constando que tá sem receita\nMas ainda tem muita",
+    "responsavelChamado": "kauan",
+    "filial": 4,
+    "categoria": "RECEITUÁRIO",
+    "rotinas": [
+      0
+    ],
+    "erroPodeSerAutomatizado": "NAO",
+    "dificuldade": "BAIXA",
+    "documentacao": "PRIVADO",
+    "tempoResolucao": "< 10 MIN",
+    "status": "RESOLVIDO",
+    "dataCriacao": "",
+    "dataLimite": "",
+    "sintomas": [
+      "Apenas limpeza de cache e cookies, devido o flutter nn ter sido parametrizado para autalizar"
+    ],
+    "causa": "",
+    "resolucao": [
+      "limpar cookies"
+    ],
+    "resultado": "",
+    "tags": [],
+    "observacoes": ""
   }
 ]
