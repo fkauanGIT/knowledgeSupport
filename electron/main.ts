@@ -2,21 +2,12 @@ import { app, BrowserWindow, dialog, ipcMain, screen, shell } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs/promises'
+import { registerApiHandlers } from './apiClient'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// The built directory structure
-//
-// ├─┬─┬ dist
-// │ │ └── index.html
-// │ │
-// │ ├─┬ dist-electron
-// │ │ ├── main.js
-// │ │ └── preload.mjs
-// │
 process.env.APP_ROOT = path.join(__dirname, '..')
 
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
@@ -117,26 +108,46 @@ ipcMain.handle('passoAPasso:abrir', (_event, nomeArquivo: string) =>
   shell.openPath(path.join(PASSO_A_PASSO_DIR, nomeArquivo)),
 )
 
-// Largura de referência de um Galaxy A56 (CSS px), altura de um card de formulário rolável
+// Integração com a knowledgeSupport-api (config persistida + todas as rotas)
+registerApiHandlers()
+
+// Dimensões da bolha, do menu e do painel
 const BUBBLE_SIZE = 64
 const BUBBLE_GAP = 12
-const MENU_ITENS = 3 // bolinha principal + Criar chamado + Olho de Deus
+// Olho de Deus + Criar chamado + Chamados API + Padrões + Lacunas + Config + fechar
+const MENU_ITENS = 7
 const MENU_HEIGHT = BUBBLE_SIZE * MENU_ITENS + BUBBLE_GAP * (MENU_ITENS - 1)
 const PHONE_WIDTH = 340
 const PHONE_HEIGHT = 560
 
 let win: BrowserWindow | null
 
-function createWindow() {
+/** Mantém uma janela (x, y, width, height) inteiramente dentro da área útil da tela. */
+function clampToWorkArea(x: number, y: number, width: number, height: number) {
   const { workArea } = screen.getPrimaryDisplay()
-  const x = workArea.x + workArea.width - BUBBLE_SIZE - 24
-  const y = workArea.y + workArea.height - BUBBLE_SIZE - 24
+  width = Math.min(width, workArea.width)
+  height = Math.min(height, workArea.height)
+  const clampedX = Math.max(workArea.x, Math.min(x, workArea.x + workArea.width - width))
+  const clampedY = Math.max(workArea.y, Math.min(y, workArea.y + workArea.height - height))
+  return { x: clampedX, y: clampedY, width, height }
+}
+
+/** Bounds que deixam uma janela de (width × height) centralizada na tela. */
+function centeredBounds(width: number, height: number) {
+  const { workArea } = screen.getPrimaryDisplay()
+  width = Math.min(width, workArea.width)
+  height = Math.min(height, workArea.height)
+  const x = workArea.x + Math.round((workArea.width - width) / 2)
+  const y = workArea.y + Math.round((workArea.height - height) / 2)
+  return { x, y, width, height }
+}
+
+function createWindow() {
+  // Janela nasce CENTRALIZADA na tela (antes: canto inferior direito)
+  const bounds = centeredBounds(BUBBLE_SIZE, BUBBLE_SIZE)
 
   win = new BrowserWindow({
-    x,
-    y,
-    width: BUBBLE_SIZE,
-    height: BUBBLE_SIZE,
+    ...bounds,
     frame: false,
     transparent: true,
     hasShadow: false,
@@ -153,36 +164,39 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 }
 
-function resizeKeepingBottomRight(width: number, height: number) {
+/** Redimensiona mantendo a janela ancorada no seu centro atual, sem sair da tela. */
+function resizeAnchored(width: number, height: number) {
   if (!win) return
-  const [currentX, currentY] = win.getPosition()
-  const [currentWidth, currentHeight] = win.getSize()
-  const { workArea } = screen.getPrimaryDisplay()
-
-  width = Math.min(width, workArea.width)
-  height = Math.min(height, workArea.height)
-
-  let x = currentX + currentWidth - width
-  let y = currentY + currentHeight - height
-  x = Math.min(Math.max(x, workArea.x), workArea.x + workArea.width - width)
-  y = Math.min(Math.max(y, workArea.y), workArea.y + workArea.height - height)
-
-  win.setBounds({ x, y, width, height })
+  const b = win.getBounds()
+  const centerX = b.x + b.width / 2
+  const centerY = b.y + b.height / 2
+  const bounds = clampToWorkArea(
+    Math.round(centerX - width / 2),
+    Math.round(centerY - height / 2),
+    width,
+    height,
+  )
+  win.setBounds(bounds)
 }
 
-ipcMain.on('bubble:menu', () => resizeKeepingBottomRight(BUBBLE_SIZE, MENU_HEIGHT))
-ipcMain.on('bubble:expand', () => resizeKeepingBottomRight(PHONE_WIDTH, PHONE_HEIGHT))
-ipcMain.on('bubble:collapse', () => resizeKeepingBottomRight(BUBBLE_SIZE, BUBBLE_SIZE))
+ipcMain.on('bubble:menu', () => resizeAnchored(BUBBLE_SIZE, MENU_HEIGHT))
+ipcMain.on('bubble:expand', () => resizeAnchored(PHONE_WIDTH, PHONE_HEIGHT))
+ipcMain.on('bubble:collapse', () => resizeAnchored(BUBBLE_SIZE, BUBBLE_SIZE))
+
+// Arrasto da bolinha: o renderer manda o delta do mouse, o main move a janela (com clamp).
+ipcMain.on('bubble:moveBy', (_event, dx: number, dy: number) => {
+  if (!win) return
+  const b = win.getBounds()
+  const bounds = clampToWorkArea(b.x + Math.round(dx), b.y + Math.round(dy), b.width, b.height)
+  win.setPosition(bounds.x, bounds.y)
+})
+
 ipcMain.on('bubble:quit', () => app.quit())
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
@@ -191,8 +205,6 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }

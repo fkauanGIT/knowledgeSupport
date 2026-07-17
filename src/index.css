@@ -12,13 +12,26 @@ body,
 .bolinha {
   width: 100%;
   height: 100%;
-  border: none;
+  border: 2px solid #ffffff;
   border-radius: 50%;
-  background-color: #2563eb;
-  color: white;
+  background: radial-gradient(circle at 30% 28%, #2b2b2b 0%, #111111 60%, #000000 100%);
+  color: #ffffff;
   font-size: 1.6rem;
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  cursor: grab;
+  user-select: none;
+  -webkit-app-region: no-drag;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.bolinha:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  transform: scale(1.05);
+}
+
+.bolinha:active {
+  cursor: grabbing;
+  transform: scale(0.96);
 }
 
 .card {
@@ -26,10 +39,11 @@ body,
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background-color: white;
+  background-color: #fafafa;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .card-header {
@@ -37,10 +51,11 @@ body,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background-color: #2563eb;
+  padding: 0.7rem 1rem;
+  background: linear-gradient(135deg, #1c1c1c 0%, #000000 100%);
   color: white;
   font-weight: 600;
+  cursor: move;
 }
 
 .card-header-botoes {
@@ -73,23 +88,31 @@ body,
   gap: 12px;
   width: 100%;
   height: 100%;
+  cursor: move;
+  -webkit-app-region: drag;
+}
+
+.bolha-menu-item {
+  -webkit-app-region: no-drag;
 }
 
 .bolha-menu-item {
   width: 64px;
   height: 64px;
   flex-shrink: 0;
-  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
-  background-color: #2563eb;
+  background: radial-gradient(circle at 30% 28%, #2b2b2b 0%, #111111 60%, #000000 100%);
   color: white;
   font-size: 1.4rem;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .bolha-menu-item:hover {
-  background-color: #1d4ed8;
+  transform: scale(1.08);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.55);
 }
 
 .bolha-fechar {
@@ -143,7 +166,7 @@ body,
   border: none;
   border-radius: 4px;
   padding: 0.3rem 0.6rem;
-  background-color: #2563eb;
+  background-color: #111111;
   color: white;
   font-size: 0.8rem;
   cursor: pointer;
@@ -193,7 +216,7 @@ body,
   border: none;
   border-radius: 4px;
   padding: 0.25rem 0.55rem;
-  background-color: #2563eb;
+  background-color: #111111;
   color: white;
   font-size: 0.78rem;
   cursor: pointer;
@@ -283,7 +306,7 @@ body,
   padding: 0.6rem 1.4rem;
   border: none;
   border-radius: 6px;
-  background-color: #2563eb;
+  background-color: #111111;
   color: white;
   font-weight: 600;
   cursor: pointer;
@@ -305,4 +328,283 @@ body,
   text-align: left;
   padding: 0.4rem;
   border-bottom: 1px solid #ddd;
+}
+
+/* ---------- Painéis das rotas da API (config, chamados, padrões, lacunas) ---------- */
+
+.painel-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.painel-topo h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.painel-topo button {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.7rem;
+  background-color: #111111;
+  color: white;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.painel-intro {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #666;
+}
+
+.painel-vazio {
+  color: #999;
+  font-size: 0.85rem;
+  margin: 0.5rem 0;
+}
+
+.aviso {
+  margin: 0.4rem 0 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+
+.aviso-ok {
+  background-color: #ecfdf5;
+  color: #065f46;
+}
+
+.aviso-erro {
+  background-color: #fef2f2;
+  color: #991b1b;
+}
+
+/* Seções de formulário (config e padrões) */
+.config-secao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.config-secao h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.config-secao label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+}
+
+.config-secao input,
+.config-secao textarea,
+.config-secao select {
+  font: inherit;
+  padding: 0.4rem;
+  border: 1px solid #999;
+  border-radius: 4px;
+}
+
+.config-secao button,
+.item-card button,
+.feedback-botoes button {
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.9rem;
+  background-color: #111111;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.config-secao button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secundario {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+.btn-perigo {
+  background-color: #b91c1c !important;
+}
+
+.config-dica {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #777;
+}
+
+.config-status {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.form-acoes {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Passos de investigação (padrões) */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px dashed #ddd;
+  padding-top: 0.5rem;
+}
+
+.steps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  background-color: #f8fafc;
+  border-radius: 6px;
+}
+
+.step-check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.35rem !important;
+}
+
+/* Lista de cards (chamados e padrões) */
+.lista-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.item-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.7rem;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.12s ease, transform 0.12s ease;
+}
+
+.item-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.item-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.item-card-titulo {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.item-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: #666;
+}
+
+.item-card-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.item-card-acoes button {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+.tag {
+  flex-shrink: 0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background-color: #111111;
+  color: white;
+  font-size: 0.7rem;
+}
+
+.analise {
+  border-top: 1px solid #eee;
+  padding-top: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.analise p {
+  margin: 0.2rem 0;
+}
+
+.analise-solucao {
+  white-space: pre-wrap;
+}
+
+.feedback-botoes {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+}
+
+.feedback-botoes button {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+}
+
+/* Resumo das lacunas */
+.lacunas-resumo {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.6rem 0;
+}
+
+.lacunas-resumo div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.lacunas-resumo strong {
+  font-size: 1.4rem;
+}
+
+.lacunas-resumo span {
+  font-size: 0.75rem;
+  color: #666;
 }

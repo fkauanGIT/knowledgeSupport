@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Ícone do knowledgeSupport: bolha preta com headset branco (suporte técnico) -->
+  <circle cx="256" cy="256" r="248" fill="#111111" stroke="#ffffff" stroke-width="12"/>
+  <g fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Headband -->
+    <path d="M150 288 v-24 a106 106 0 0 1 212 0 v24"/>
+    <!-- Mic boom -->
+    <path d="M158 300 q-6 96 92 96"/>
+  </g>
+  <!-- Ear cups -->
+  <rect x="128" y="284" width="46" height="92" rx="22" fill="#ffffff"/>
+  <rect x="338" y="284" width="46" height="92" rx="22" fill="#ffffff"/>
+  <!-- Mic tip -->
+  <circle cx="256" cy="396" r="18" fill="#ffffff"/>
+</svg>

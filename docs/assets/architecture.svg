@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" width="900" height="460" font-family="system-ui, sans-serif">
+  <rect width="900" height="460" fill="#ffffff"/>
+  <text x="450" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#111">knowledgeSupport — arquitetura do desktop</text>
+
+  <!-- Renderer -->
+  <rect x="40" y="80" width="230" height="300" rx="12" fill="#f8fafc" stroke="#111" stroke-width="2"/>
+  <text x="155" y="108" text-anchor="middle" font-size="16" font-weight="700" fill="#111">Renderer (React)</text>
+  <text x="155" y="132" text-anchor="middle" font-size="12" fill="#555">Processo de UI</text>
+  <g font-size="12" fill="#111">
+    <rect x="62" y="150" width="186" height="30" rx="6" fill="#fff" stroke="#ccc"/><text x="155" y="170" text-anchor="middle">App.tsx (menu)</text>
+    <rect x="62" y="186" width="186" height="30" rx="6" fill="#fff" stroke="#ccc"/><text x="155" y="206" text-anchor="middle">ChamadosApi / Padrões</text>
+    <rect x="62" y="222" width="186" height="30" rx="6" fill="#fff" stroke="#ccc"/><text x="155" y="242" text-anchor="middle">Lacunas / Olho de Deus</text>
+    <rect x="62" y="258" width="186" height="30" rx="6" fill="#fff" stroke="#ccc"/><text x="155" y="278" text-anchor="middle">ConfigPanel (Jira)</text>
+    <rect x="62" y="300" width="186" height="30" rx="6" fill="#fff" stroke="#ccc"/><text x="155" y="320" text-anchor="middle">window.backendAPI</text>
+  </g>
+
+  <!-- Main -->
+  <rect x="335" y="80" width="230" height="300" rx="12" fill="#f8fafc" stroke="#111" stroke-width="2"/>
+  <text x="450" y="108" text-anchor="middle" font-size="16" font-weight="700" fill="#111">Main (Electron)</text>
+  <text x="450" y="132" text-anchor="middle" font-size="12" fill="#555">Processo Node — sem CORS</text>
+  <g font-size="12" fill="#111">
+    <rect x="357" y="150" width="186" height="30" rx="6" fill="#fff" stroke="#ccc"/><text x="450" y="170" text-anchor="middle">preload (contextBridge)</text>
+    <rect x="357" y="186" width="186" height="46" rx="6" fill="#fff" stroke="#ccc"/><text x="450" y="204" text-anchor="middle">apiClient.ts</text><text x="450" y="222" text-anchor="middle" font-size="11" fill="#555">HTTP + X-API-KEY</text>
+    <rect x="357" y="238" width="186" height="30" rx="6" fill="#fff" stroke="#ccc"/><text x="450" y="258" text-anchor="middle">config.json (local)</text>
+    <rect x="357" y="274" width="186" height="46" rx="6" fill="#fff" stroke="#ccc"/><text x="450" y="292" text-anchor="middle">chamados.json + uploads</text><text x="450" y="310" text-anchor="middle" font-size="11" fill="#555">base local</text>
+  </g>
+
+  <!-- API -->
+  <rect x="630" y="80" width="230" height="300" rx="12" fill="#111" stroke="#111" stroke-width="2"/>
+  <text x="745" y="108" text-anchor="middle" font-size="16" font-weight="700" fill="#fff">knowledgeSupport-api</text>
+  <text x="745" y="132" text-anchor="middle" font-size="12" fill="#bbb">Spring Boot (hexagonal)</text>
+  <g font-size="12" fill="#fff">
+    <rect x="652" y="150" width="186" height="30" rx="6" fill="#1f2937" stroke="#374151"/><text x="745" y="170" text-anchor="middle">/api/calleds</text>
+    <rect x="652" y="186" width="186" height="30" rx="6" fill="#1f2937" stroke="#374151"/><text x="745" y="206" text-anchor="middle">/api/standards</text>
+    <rect x="652" y="222" width="186" height="30" rx="6" fill="#1f2937" stroke="#374151"/><text x="745" y="242" text-anchor="middle">/api/calleds/gap-report</text>
+    <rect x="652" y="258" width="186" height="46" rx="6" fill="#2563553a" stroke="#10b981"/><text x="745" y="277" text-anchor="middle" fill="#d1fae5">/api/settings/jira</text><text x="745" y="295" text-anchor="middle" font-size="11" fill="#a7f3d0">token em runtime</text>
+    <rect x="652" y="312" width="186" height="30" rx="6" fill="#1f2937" stroke="#374151"/><text x="745" y="332" text-anchor="middle">Jira · PostgreSQL</text>
+  </g>
+
+  <!-- Arrows -->
+  <g stroke="#111" stroke-width="2" fill="#111">
+    <line x1="270" y1="315" x2="333" y2="315" marker-end="url(#a)"/>
+    <line x1="333" y1="300" x2="272" y2="300" marker-end="url(#a)"/>
+    <line x1="565" y1="205" x2="628" y2="205" marker-end="url(#a)"/>
+    <line x1="628" y1="220" x2="567" y2="220" marker-end="url(#a)"/>
+  </g>
+  <text x="300" y="345" text-anchor="middle" font-size="11" fill="#555">IPC</text>
+  <text x="597" y="245" text-anchor="middle" font-size="11" fill="#555">HTTPS</text>
+
+  <defs>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#111"/>
+    </marker>
+  </defs>
+</svg>

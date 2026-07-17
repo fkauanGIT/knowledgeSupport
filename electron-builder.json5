@@ -1,9 +1,10 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "com.knowledgeSupport.desktop",
   "asar": true,
-  "productName": "YourAppName",
+  "productName": "knowledgeSupport",
+  "icon": "build/icon.png",
   "directories": {
     "output": "release/${version}"
   },

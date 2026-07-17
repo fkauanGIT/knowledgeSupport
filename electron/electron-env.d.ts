@@ -43,6 +43,7 @@ interface Window {
     menu: () => void
     expand: () => void
     collapse: () => void
+    moveBy: (dx: number, dy: number) => void
     quit: () => void
   }
 }
