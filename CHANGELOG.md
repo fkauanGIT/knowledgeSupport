@@ -5,6 +5,13 @@ Todas as mudanças relevantes deste projeto são documentadas aqui. O formato se
 [SemVer](https://semver.org/lang/pt-BR/), gerenciado automaticamente pelo
 [Release Please](https://github.com/googleapis/release-please).
 
+## [1.1.0](https://github.com/fkauanGIT/knowledgeSupport/compare/v1.0.0...v1.1.0) (2026-07-17)
+
+
+### Features
+
+* integrate all knowledgeSupport-api routes (calleds, standards, gaps, config) ([be5a243](https://github.com/fkauanGIT/knowledgeSupport/commit/be5a24309a3e451caa3b28865c67f8ddfe3babd2))
+
 ## 1.0.0 (2026-07-17)
 
 ### Features
