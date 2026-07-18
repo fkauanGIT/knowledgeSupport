@@ -12,9 +12,9 @@
 
 ## Visão geral
 
-O app abre como uma pequena bolha preta com um ícone de headset. Ao clicar, ela expande em
-um menu radial com sete ações e, a partir dele, em painéis que cobrem toda a jornada de
-suporte: da base local de chamados à integração completa com a API (Jira + base de padrões).
+O app fica como uma pequena bolha preta flutuante com um ícone de headset — arrastável para
+qualquer canto da tela. Ao clicar, ela abre a janela principal: sidebar de navegação, área de
+conteúdo e um painel lateral com o status da conexão e o detalhe do chamado selecionado.
 
 Os chamados vêm do Jira em tempo real através da API; os padrões (erros conhecidos e suas
 soluções) são persistidos no backend; e a análise cruza um com o outro para sugerir a
@@ -24,10 +24,9 @@ resolução mais provável.
 
 ## Funcionalidades
 
-- **Olho de Deus** — busca rápida na base local de chamados por erro/rotina, com mensagem
-  pronta para copiar e anexos de passo a passo.
-- **Criar chamado** — cadastro completo de chamados na base local (JSON).
-- **Chamados (Jira)** — lista os chamados abertos vindos do Jira, analisa cada um contra os
+- **Home** — dashboard com o resumo: chamados abertos, padrões cadastrados, chamados sem
+  padrão e a rotina com maior lacuna.
+- **Chamados** — lista os chamados abertos vindos do Jira, analisa cada um contra os
   padrões cadastrados e permite registrar feedback (resolveu ou não).
 - **Padrões** — CRUD da base de conhecimento (erro, solução, passos de investigação) e taxa
   de acurácia por padrão, alimentada pelo feedback real.
@@ -47,9 +46,9 @@ npm install
 npm run dev
 ```
 
-A janela nasce centralizada na tela. Na primeira execução, abra **Configurações** (⚙️) e
-informe a URL da API e a `X-API-KEY`. Em seguida, ainda em Configurações, preencha os dados
-do Jira (URL base, e-mail, token e JQL).
+Clique na bolha para abrir o app. Na primeira execução, vá em **Configurações** e informe a
+URL da API e a `X-API-KEY`. Em seguida, ainda em Configurações, preencha os dados do Jira
+(URL base, e-mail, token e JQL).
 
 ## Build / empacotamento
 

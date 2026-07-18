@@ -1,7 +1,18 @@
 import { useEffect, useState } from 'react'
 import type { CalledAnalysisResponse, CalledResponse } from '../api/types'
 
-export default function ChamadosApi() {
+interface ChamadosApiProps {
+  selecionado?: CalledResponse | null
+  onSelecionar?: (chamado: CalledResponse | null) => void
+  /** Avisa o app que algo mudou (feedback enviado), para atualizar o resumo. */
+  onMudou?: () => void
+}
+
+export default function ChamadosApi({
+  selecionado,
+  onSelecionar,
+  onMudou,
+}: ChamadosApiProps = {}) {
   const [calleds, setCalleds] = useState<CalledResponse[]>([])
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
@@ -44,8 +55,10 @@ export default function ChamadosApi() {
 
   const enviarFeedback = async (key: string, standardId: string, resolved: boolean) => {
     const r = await window.backendAPI.sendFeedback(key, { standardId, resolved })
-    if (r.ok) setFeedbackDado((f) => ({ ...f, [key]: true }))
-    else setErro(r.error)
+    if (r.ok) {
+      setFeedbackDado((f) => ({ ...f, [key]: true }))
+      onMudou?.()
+    } else setErro(r.error)
   }
 
   return (
@@ -67,7 +80,13 @@ export default function ChamadosApi() {
         {calleds.map((c) => {
           const analise = analises[c.jiraKey]
           return (
-            <div key={c.jiraKey} className="item-card">
+            <div
+              key={c.jiraKey}
+              className={`item-card ${selecionado?.jiraKey === c.jiraKey ? 'selecionado' : ''}`}
+              onClick={() =>
+                onSelecionar?.(selecionado?.jiraKey === c.jiraKey ? null : c)
+              }
+            >
               <div className="item-card-header">
                 <strong>{c.jiraKey}</strong>
                 {c.status && <span className="tag">{c.status}</span>}

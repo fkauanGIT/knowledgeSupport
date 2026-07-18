@@ -13,17 +13,23 @@ uma fronteira de segurança clara.
 ### Renderer (`src/`)
 
 A interface React. É o único lugar com JSX e estado de UI. **Não** faz HTTP direto nem conhece
-a `X-API-KEY` ou o token do Jira — tudo passa por `window.backendAPI`, `window.chamadosAPI`,
-`window.passoAPassoAPI` e `window.bubbleAPI`, injetados pelo preload.
+a `X-API-KEY` ou o token do Jira — tudo passa por `window.backendAPI` e `window.bubbleAPI`,
+injetados pelo preload.
 
 Componentes principais:
 
-- `App.tsx` — máquina de estados da bolha (`colapsado → menu → painel`) e o menu de 7 itens.
-- `components/OlhoDeDeus.tsx`, `ChamadoForm.tsx`, `ChamadoList.tsx` — base local de chamados.
+- `App.tsx` — alterna entre a bolha (lançador arrastável) e a janela do app; guarda a seção
+  ativa e o chamado selecionado.
+- `components/AppShell.tsx` — o layout: barra superior, sidebar de navegação, conteúdo e
+  painel lateral direito.
+- `components/Dashboard.tsx` — a Home, com os cards de resumo.
 - `components/ChamadosApi.tsx` — chamados do Jira (listar, analisar, feedback).
 - `components/PadroesPanel.tsx` — CRUD de padrões + acurácia.
 - `components/LacunasPanel.tsx` — relatório de lacunas.
 - `components/ConfigPanel.tsx` — conexão com a API e token do Jira.
+- `components/PainelDireito.tsx` — status da conexão e detalhe do chamado selecionado.
+- `hooks/useResumo.ts` — consolida os números que a Home e o painel direito compartilham.
+- `navegacao.ts` — fonte única das seções (sidebar + cabeçalho).
 
 ### Preload (`electron/preload.ts`)
 
@@ -35,8 +41,9 @@ renderer, cada uma apenas repassando um `ipcRenderer.invoke`/`send` para um cana
 
 O processo Node. Concentra tudo que é "sistema": janelas, arquivos e HTTP.
 
-- `main.ts` — cria a janela (sempre **centralizada**, via `centeredBounds`), trata os canais
-  da bolha (`bubble:*`), da base local (`chamados:*`) e do passo a passo (`passoAPasso:*`).
+- `main.ts` — cria a janela (nasce centralizada) e trata os canais da bolha (`bubble:*`):
+  abrir, minimizar, mover (arrasto) e sair. Ao redimensionar, ancora no centro atual em vez de
+  recentralizar, e mantém a janela dentro da área útil da tela.
 - `apiClient.ts` — o **adapter de saída**: o único lugar que conhece HTTP e a `X-API-KEY`.
   Toda chamada volta como `{ ok, data }` ou `{ ok, error }`, então uma exceção nunca cruza o
   IPC crua.
@@ -66,10 +73,10 @@ IPC (`api:settings:jira:get` / `:set`) em `apiClient.ts`.
 
 ## Onde os dados moram
 
-- **Chamados locais** — `data/chamados.json` + anexos em `data/uploads/` (base offline, útil
-  para o Olho de Deus).
 - **Config do desktop** — `config.json` no `userData` (URL da API + `X-API-KEY`).
 - **Chamados do Jira, padrões, feedback, lacunas** — na knowledgeSupport-api (Jira + PostgreSQL).
+
+O app não tem mais base local: o Jira é a fonte de verdade dos chamados e o backend, a dos padrões.
 
 ## Tipos como contrato
 

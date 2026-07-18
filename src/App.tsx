@@ -1,53 +1,23 @@
-import { useEffect, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import ChamadoForm from './components/ChamadoForm'
-import ChamadoList from './components/ChamadoList'
-import OlhoDeDeus from './components/OlhoDeDeus'
+import { useState, type PointerEvent as ReactPointerEvent } from 'react'
+import AppShell from './components/AppShell'
+import Dashboard from './components/Dashboard'
+import PainelDireito from './components/PainelDireito'
 import ChamadosApi from './components/ChamadosApi'
 import PadroesPanel from './components/PadroesPanel'
 import LacunasPanel from './components/LacunasPanel'
 import ConfigPanel from './components/ConfigPanel'
-import type { Chamado } from './types/chamado'
-
-type Estado =
-  | 'colapsado'
-  | 'menu'
-  | 'novo'
-  | 'olho'
-  | 'chamados'
-  | 'padroes'
-  | 'lacunas'
-  | 'config'
-
-const TITULOS: Record<Exclude<Estado, 'colapsado' | 'menu'>, string> = {
-  novo: 'Criar chamado',
-  olho: 'Olho de Deus',
-  chamados: 'Chamados (Jira)',
-  padroes: 'Padrões',
-  lacunas: 'Lacunas',
-  config: 'Configurações',
-}
+import { useResumo } from './hooks/useResumo'
+import type { Secao } from './navegacao'
+import type { CalledResponse } from './api/types'
 
 function App() {
-  const [estado, setEstado] = useState<Estado>('colapsado')
-  const [chamados, setChamados] = useState<Chamado[]>([])
+  const [aberto, setAberto] = useState(false)
+  const [secao, setSecao] = useState<Secao>('home')
+  const [selecionado, setSelecionado] = useState<CalledResponse | null>(null)
 
-  useEffect(() => {
-    if (estado === 'novo' || estado === 'olho') {
-      window.chamadosAPI.getAll().then(setChamados)
-    }
-  }, [estado])
+  const { resumo, recarregar } = useResumo()
 
-  const abrir = (proximo: Exclude<Estado, 'colapsado' | 'menu'>) => {
-    setEstado(proximo)
-    window.bubbleAPI.expand()
-  }
-
-  const abrirMenu = () => {
-    setEstado('menu')
-    window.bubbleAPI.menu()
-  }
-
-  // Arrasto da bolinha: clique curto abre o menu; se mover além do limiar, vira arrasto.
+  // Arrasto da bolinha: clique curto abre o app; se mover além do limiar, vira arrasto.
   const iniciarArrasto = (e: ReactPointerEvent<HTMLButtonElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId)
     const inicio = { x: e.screenX, y: e.screenY }
@@ -70,14 +40,27 @@ function App() {
     const soltar = () => {
       window.removeEventListener('pointermove', mover)
       window.removeEventListener('pointerup', soltar)
-      if (!arrastando) abrirMenu()
+      if (!arrastando) {
+        setAberto(true)
+        window.bubbleAPI.expand()
+      }
     }
 
     window.addEventListener('pointermove', mover)
     window.addEventListener('pointerup', soltar)
   }
 
-  if (estado === 'colapsado') {
+  const minimizar = () => {
+    setAberto(false)
+    window.bubbleAPI.collapse()
+  }
+
+  const navegar = (proxima: Secao) => {
+    setSecao(proxima)
+    if (proxima !== 'chamados') setSelecionado(null)
+  }
+
+  if (!aberto) {
     return (
       <button
         className="bolinha"
@@ -89,96 +72,32 @@ function App() {
     )
   }
 
-  if (estado === 'menu') {
-    return (
-      <div className="bolha-menu">
-        <button className="bolha-menu-item" onClick={() => abrir('olho')} title="Olho de Deus">
-          👁️
-        </button>
-        <button className="bolha-menu-item" onClick={() => abrir('novo')} title="Criar chamado">
-          ➕
-        </button>
-        <button
-          className="bolha-menu-item"
-          onClick={() => abrir('chamados')}
-          title="Chamados (Jira)"
-        >
-          🎫
-        </button>
-        <button className="bolha-menu-item" onClick={() => abrir('padroes')} title="Padrões">
-          📚
-        </button>
-        <button className="bolha-menu-item" onClick={() => abrir('lacunas')} title="Lacunas">
-          📊
-        </button>
-        <button className="bolha-menu-item" onClick={() => abrir('config')} title="Configurações">
-          ⚙️
-        </button>
-        <button
-          className="bolha-menu-item bolha-fechar"
-          onClick={() => {
-            setEstado('colapsado')
-            window.bubbleAPI.collapse()
-          }}
-          title="Fechar menu"
-        >
-          ×
-        </button>
-      </div>
-    )
-  }
-
   return (
-    <div className="card">
-      <header className="card-header">
-        <span>{TITULOS[estado]}</span>
-        <div className="card-header-botoes">
-          <button
-            onClick={() => {
-              setEstado('menu')
-              window.bubbleAPI.menu()
-            }}
-            title="Voltar ao menu"
-          >
-            ‹
-          </button>
-          <button
-            onClick={() => {
-              setEstado('colapsado')
-              window.bubbleAPI.collapse()
-            }}
-            title="Minimizar"
-          >
-            –
-          </button>
-          <button onClick={() => window.bubbleAPI.quit()} title="Fechar">
-            ×
-          </button>
-        </div>
-      </header>
+    <AppShell
+      secao={secao}
+      onNavegar={navegar}
+      onMinimizar={minimizar}
+      onFechar={() => window.bubbleAPI.quit()}
+      painel={
+        <PainelDireito resumo={resumo} selecionado={selecionado} onRecarregar={recarregar} />
+      }
+    >
+      {secao === 'home' && <Dashboard resumo={resumo} onNavegar={navegar} />}
 
-      <div className="card-conteudo">
-        {estado === 'novo' && (
-          <>
-            <ChamadoForm onSalvo={(chamado) => setChamados((atual) => [...atual, chamado])} />
-            <h2>Chamados cadastrados</h2>
-            <ChamadoList chamados={chamados} />
-          </>
-        )}
-        {estado === 'olho' && (
-          <OlhoDeDeus
-            chamados={chamados}
-            onAtualizarChamado={(chamado) =>
-              setChamados((atual) => atual.map((c) => (c.id === chamado.id ? chamado : c)))
-            }
-          />
-        )}
-        {estado === 'chamados' && <ChamadosApi />}
-        {estado === 'padroes' && <PadroesPanel />}
-        {estado === 'lacunas' && <LacunasPanel />}
-        {estado === 'config' && <ConfigPanel />}
-      </div>
-    </div>
+      {secao === 'chamados' && (
+        <ChamadosApi
+          selecionado={selecionado}
+          onSelecionar={setSelecionado}
+          onMudou={recarregar}
+        />
+      )}
+
+      {secao === 'padroes' && <PadroesPanel onMudou={recarregar} />}
+
+      {secao === 'lacunas' && <LacunasPanel />}
+
+      {secao === 'config' && <ConfigPanel />}
+    </AppShell>
   )
 }
 

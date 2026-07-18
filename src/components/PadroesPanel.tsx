@@ -31,7 +31,12 @@ const formVazio: FormPadrao = {
   investigationSteps: [],
 }
 
-export default function PadroesPanel() {
+interface PadroesPanelProps {
+  /** Avisa o app que a base mudou, para atualizar o resumo. */
+  onMudou?: () => void
+}
+
+export default function PadroesPanel({ onMudou }: PadroesPanelProps = {}) {
   const [padroes, setPadroes] = useState<StandardResponse[]>([])
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
@@ -88,6 +93,7 @@ export default function PadroesPanel() {
     if (r.ok) {
       resetForm()
       await carregar()
+      onMudou?.()
     } else {
       setErro(r.error)
     }
@@ -99,6 +105,7 @@ export default function PadroesPanel() {
     if (r.ok) {
       if (editandoId === id) resetForm()
       await carregar()
+      onMudou?.()
     } else setErro(r.error)
   }
 
