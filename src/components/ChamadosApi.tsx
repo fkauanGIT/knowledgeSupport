@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
-import type { CalledAnalysisResponse, CalledResponse } from '../api/types'
+import { useEffect, useMemo, useState } from 'react'
+import type { CalledAnalysisResponse, CalledResponse, FilterCategory, IncidentType } from '../api/types'
+
+const TODOS = 'TODOS'
 
 interface ChamadosApiProps {
   selecionado?: CalledResponse | null
@@ -20,6 +22,31 @@ export default function ChamadosApi({
   const [abertos, setAbertos] = useState<Set<string>>(new Set())
   const [analisando, setAnalisando] = useState<string | null>(null)
   const [feedbackDado, setFeedbackDado] = useState<Record<string, boolean>>({})
+
+  const [busca, setBusca] = useState('')
+  const [filtroStatus, setFiltroStatus] = useState(TODOS)
+  const [filtroTipo, setFiltroTipo] = useState<IncidentType | typeof TODOS>(TODOS)
+  const [filtroCategoria, setFiltroCategoria] = useState<FilterCategory | typeof TODOS>(TODOS)
+
+  // Status vêm do Jira em texto livre (workflow customizado por projeto) — não há
+  // enum fixo possível, então as opções do filtro são derivadas do que já carregou.
+  const statusDisponiveis = useMemo(
+    () => Array.from(new Set(calleds.map((c) => c.status).filter((s): s is string => !!s))).sort(),
+    [calleds],
+  )
+
+  const calledsFiltrados = calleds.filter((c) => {
+    if (filtroStatus !== TODOS && c.status !== filtroStatus) return false
+    if (filtroTipo !== TODOS && c.incidentType !== filtroTipo) return false
+    if (filtroCategoria !== TODOS && c.filterCategory !== filtroCategoria) return false
+    if (busca.trim()) {
+      const alvo = busca.trim().toLowerCase()
+      const combina =
+        c.jiraKey.toLowerCase().includes(alvo) || c.titleCalled.toLowerCase().includes(alvo)
+      if (!combina) return false
+    }
+    return true
+  })
 
   const alternarAberto = (key: string, aberto?: boolean) =>
     setAbertos((atual) => {
@@ -72,12 +99,56 @@ export default function ChamadosApi({
 
       {erro && <p className="aviso aviso-erro">{erro}</p>}
 
+      {calleds.length > 0 && (
+        <div className="chamados-filtros">
+          <input
+            type="text"
+            placeholder="Buscar por chave ou título..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+          />
+
+          <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
+            <option value={TODOS}>Status: todos</option>
+            {statusDisponiveis.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={filtroTipo}
+            onChange={(e) => setFiltroTipo(e.target.value as IncidentType | typeof TODOS)}
+          >
+            <option value={TODOS}>Tipo: todos</option>
+            <option value="ALERT">ALERT</option>
+            <option value="ERROR">ERROR</option>
+          </select>
+
+          <select
+            value={filtroCategoria}
+            onChange={(e) => setFiltroCategoria(e.target.value as FilterCategory | typeof TODOS)}
+          >
+            <option value={TODOS}>Categoria: todas</option>
+            <option value="SUPPORT">SUPPORT</option>
+            <option value="INFRASTRUCTURE">INFRASTRUCTURE</option>
+            <option value="DEVELOPMENT">DEVELOPMENT</option>
+            <option value="PENDING">PENDING</option>
+          </select>
+        </div>
+      )}
+
       {!carregando && calleds.length === 0 && !erro && (
         <p className="painel-vazio">Nenhum chamado aberto encontrado.</p>
       )}
 
+      {!carregando && calleds.length > 0 && calledsFiltrados.length === 0 && (
+        <p className="painel-vazio">Nenhum chamado corresponde aos filtros.</p>
+      )}
+
       <div className="lista-cards">
-        {calleds.map((c) => {
+        {calledsFiltrados.map((c) => {
           const analise = analises[c.jiraKey]
           return (
             <div
