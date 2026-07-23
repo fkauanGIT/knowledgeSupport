@@ -1,4 +1,5 @@
 import { ipcRenderer, contextBridge } from 'electron'
+import type { AppConfig } from '../src/api/types'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -36,8 +37,7 @@ contextBridge.exposeInMainWorld('bubbleAPI', {
 // o renderer nunca vê a API key — só resultados { ok, data | error }).
 contextBridge.exposeInMainWorld('backendAPI', {
   getConfig: () => ipcRenderer.invoke('config:get'),
-  setConfig: (config: { apiUrl: string; apiKey: string }) =>
-    ipcRenderer.invoke('config:set', config),
+  setConfig: (patch: Partial<AppConfig>) => ipcRenderer.invoke('config:set', patch),
 
   getJiraSettings: () => ipcRenderer.invoke('api:settings:jira:get'),
   setJiraSettings: (body: unknown) => ipcRenderer.invoke('api:settings:jira:set', body),
@@ -47,6 +47,9 @@ contextBridge.exposeInMainWorld('backendAPI', {
   sendFeedback: (key: string, body: { standardId: string; resolved: boolean }) =>
     ipcRenderer.invoke('api:calleds:feedback', key, body),
   gapReport: () => ipcRenderer.invoke('api:calleds:gapReport'),
+
+  sendChatwootMessage: (conversationId: string, content: string) =>
+    ipcRenderer.invoke('chatwoot:sendMessage', conversationId, content),
 
   listStandards: () => ipcRenderer.invoke('api:standards:list'),
   getStandard: (id: string) => ipcRenderer.invoke('api:standards:get', id),

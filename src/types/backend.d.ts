@@ -5,6 +5,7 @@ import type {
   AppConfig,
   CalledAnalysisResponse,
   CalledResponse,
+  ChatwootMessageResponse,
   FeedbackResponse,
   GapReportResponse,
   JiraSettings,
@@ -18,7 +19,7 @@ declare global {
   interface Window {
     backendAPI: {
       getConfig: () => Promise<AppConfig>
-      setConfig: (config: AppConfig) => Promise<AppConfig>
+      setConfig: (patch: Partial<AppConfig>) => Promise<AppConfig>
 
       getJiraSettings: () => Promise<ApiResult<JiraSettings>>
       setJiraSettings: (body: JiraSettingsInput) => Promise<ApiResult<JiraSettings>>
@@ -30,6 +31,11 @@ declare global {
         body: { standardId: string; resolved: boolean },
       ) => Promise<ApiResult<FeedbackResponse>>
       gapReport: () => Promise<ApiResult<GapReportResponse>>
+
+      sendChatwootMessage: (
+        conversationId: string,
+        content: string,
+      ) => Promise<ApiResult<ChatwootMessageResponse>>
 
       listStandards: () => Promise<ApiResult<StandardResponse[]>>
       getStandard: (id: string) => Promise<ApiResult<StandardResponse>>

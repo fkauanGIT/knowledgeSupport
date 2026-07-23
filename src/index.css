@@ -811,6 +811,116 @@ button:disabled {
   font-size: 0.76rem;
 }
 
+/* Resultado da análise, colapsado num card único (estilo Jira) */
+.chamado-resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chamado-resultado-meta {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--txt-3);
+}
+
+.chamado-mensagem {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.82rem;
+  color: var(--txt-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.chamado-mensagem-edicao {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-3);
+  color: var(--txt);
+  font: inherit;
+  font-size: 0.84rem;
+  resize: vertical;
+  outline: none;
+}
+
+.chamado-mensagem-edicao:focus {
+  border-color: var(--verde);
+  box-shadow: 0 0 0 3px var(--verde-fraco);
+}
+
+.chamado-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.chamado-acoes button {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.76rem;
+}
+
+.chamado-envio-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.chamado-envio-form input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-3);
+  color: var(--txt);
+  font: inherit;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.chamado-envio-form input:focus {
+  border-color: var(--verde);
+  box-shadow: 0 0 0 3px var(--verde-fraco);
+}
+
+.chamado-envio-form button {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.76rem;
+}
+
+.fontes-eyebrow {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--txt-3);
+}
+
+.fonte {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-3);
+  padding: 0.45rem 0.55rem;
+}
+
+.fonte-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.fonte-nome {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
 /* Lacunas */
 .lacunas-resumo {
   display: flex;

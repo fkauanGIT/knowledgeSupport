@@ -8,6 +8,17 @@ export type Confidence = 'CONFIRMED' | 'LIKELY' | 'UNCERTAIN' | 'NONE'
 export interface AppConfig {
   apiUrl: string
   apiKey: string
+  chatwootUrl: string
+  chatwootAccountId: string
+  chatwootToken: string
+}
+
+// ---------- Chatwoot (integração à parte da knowledgeSupport-api) ----------
+
+/** Resposta da API do Chatwoot ao criar mensagem — só os campos que usamos. */
+export interface ChatwootMessageResponse {
+  id: number
+  content: string
 }
 
 // ---------- Jira settings (GET/PUT /api/settings/jira) ----------

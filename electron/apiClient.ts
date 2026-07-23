@@ -11,9 +11,18 @@ import fs from 'node:fs/promises'
 export interface AppConfig {
   apiUrl: string
   apiKey: string
+  chatwootUrl: string
+  chatwootAccountId: string
+  chatwootToken: string
 }
 
-const defaultConfig: AppConfig = { apiUrl: 'http://localhost:8080', apiKey: '' }
+const defaultConfig: AppConfig = {
+  apiUrl: 'http://localhost:8080',
+  apiKey: '',
+  chatwootUrl: '',
+  chatwootAccountId: '',
+  chatwootToken: '',
+}
 
 function configPath() {
   return path.join(app.getPath('userData'), 'config.json')
@@ -28,15 +37,28 @@ export async function readConfig(): Promise<AppConfig> {
   }
 }
 
-export async function writeConfig(config: AppConfig): Promise<AppConfig> {
+/** Mescla só os campos enviados por cima do config atual — cada tela salva sua própria seção. */
+export async function writeConfig(patch: Partial<AppConfig>): Promise<AppConfig> {
+  const atual = await readConfig()
+  const proximo = { ...atual, ...patch }
   await fs.mkdir(app.getPath('userData'), { recursive: true })
-  await fs.writeFile(configPath(), JSON.stringify(config, null, 2), 'utf-8')
-  return config
+  await fs.writeFile(configPath(), JSON.stringify(proximo, null, 2), 'utf-8')
+  return proximo
 }
 
 // Resultado estruturado: o renderer sempre recebe { ok, data | error },
 // nunca uma exceção crua atravessando o IPC.
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; error: string }
+
+/** Extrai a mensagem de erro do corpo da resposta (se vier JSON), com fallback pro status. */
+export async function extrairErro(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { message?: string; error?: string }
+    return body.message ?? body.error ?? `Erro ${response.status}`
+  } catch {
+    return `Erro ${response.status}`
+  }
+}
 
 async function request<T>(path_: string, init?: RequestInit): Promise<ApiResult<T>> {
   const config = await readConfig()
@@ -55,16 +77,10 @@ async function request<T>(path_: string, init?: RequestInit): Promise<ApiResult<
       },
     })
     if (!response.ok) {
-      let message = `Erro ${response.status}`
-      try {
-        const body = (await response.json()) as { message?: string; error?: string }
-        message = body.message ?? body.error ?? message
-      } catch {
-        /* corpo não-JSON */
-      }
-      if (response.status === 401 || response.status === 403) {
-        message = 'Não autorizado — confira a API key em Configurações.'
-      }
+      const message =
+        response.status === 401 || response.status === 403
+          ? 'Não autorizado — confira a API key em Configurações.'
+          : await extrairErro(response)
       return { ok: false, status: response.status, error: message }
     }
     if (response.status === 204) return { ok: true, data: undefined as T }
@@ -85,11 +101,11 @@ const put = (p: string, body: unknown) =>
   request(p, { method: 'PUT', body: JSON.stringify(body) })
 const del = (p: string) => request(p, { method: 'DELETE' })
 
-/** Registra todos os canais IPC da integração com a API. Chamar uma vez no boot. */
+/** Registra os canais IPC da knowledgeSupport-api (config, Jira, calleds, padrões). */
 export function registerApiHandlers() {
-  // Configuração do desktop (URL da API + X-API-KEY)
+  // Configuração do desktop (URL da API + X-API-KEY + demais integrações)
   ipcMain.handle('config:get', () => readConfig())
-  ipcMain.handle('config:set', (_e, config: AppConfig) => writeConfig(config))
+  ipcMain.handle('config:set', (_e, patch: Partial<AppConfig>) => writeConfig(patch))
 
   // Configuração do Jira (rotação de token em runtime, sem editar .env da API)
   ipcMain.handle('api:settings:jira:get', () => get('/api/settings/jira'))

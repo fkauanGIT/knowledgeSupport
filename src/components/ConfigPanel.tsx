@@ -19,10 +19,20 @@ export default function ConfigPanel() {
   const [avisoJira, setAvisoJira] = useState<Aviso>(null)
   const [salvandoJira, setSalvandoJira] = useState(false)
 
+  // --- Config do Chatwoot (envio de mensagens) ---
+  const [chatwootUrl, setChatwootUrl] = useState('')
+  const [chatwootAccountId, setChatwootAccountId] = useState('')
+  const [chatwootToken, setChatwootToken] = useState('')
+  const [avisoChatwoot, setAvisoChatwoot] = useState<Aviso>(null)
+  const [salvandoChatwoot, setSalvandoChatwoot] = useState(false)
+
   useEffect(() => {
     window.backendAPI.getConfig().then((cfg) => {
       setApiUrl(cfg.apiUrl)
       setApiKey(cfg.apiKey)
+      setChatwootUrl(cfg.chatwootUrl)
+      setChatwootAccountId(cfg.chatwootAccountId)
+      setChatwootToken(cfg.chatwootToken)
     })
     carregarJira()
   }, [])
@@ -50,6 +60,21 @@ export default function ConfigPanel() {
       await carregarJira()
     } finally {
       setSalvandoDesktop(false)
+    }
+  }
+
+  const salvarChatwoot = async (e: FormEvent) => {
+    e.preventDefault()
+    setSalvandoChatwoot(true)
+    try {
+      await window.backendAPI.setConfig({
+        chatwootUrl: chatwootUrl.trim(),
+        chatwootAccountId: chatwootAccountId.trim(),
+        chatwootToken: chatwootToken.trim(),
+      })
+      setAvisoChatwoot({ tipo: 'ok', texto: 'Configuração do Chatwoot salva.' })
+    } finally {
+      setSalvandoChatwoot(false)
     }
   }
 
@@ -152,6 +177,44 @@ export default function ConfigPanel() {
           {salvandoJira ? 'Salvando...' : 'Salvar Jira'}
         </button>
         {avisoJira && <p className={`aviso aviso-${avisoJira.tipo}`}>{avisoJira.texto}</p>}
+      </form>
+
+      <form className="config-secao" onSubmit={salvarChatwoot}>
+        <h2>Chatwoot</h2>
+        <p className="config-dica">
+          Usado para enviar a mensagem gerada pela análise a uma conversa do Chatwoot. O
+          conversation_id ainda é informado manualmente na hora do envio — não há (ainda) um
+          mapeamento automático entre chamado do Jira e conversa do Chatwoot.
+        </p>
+        <label>
+          URL do Chatwoot
+          <input
+            value={chatwootUrl}
+            onChange={(e) => setChatwootUrl(e.target.value)}
+            placeholder="https://app.chatwoot.com"
+          />
+        </label>
+        <label>
+          Account ID
+          <input
+            value={chatwootAccountId}
+            onChange={(e) => setChatwootAccountId(e.target.value)}
+            placeholder="1"
+          />
+        </label>
+        <label>
+          Token de acesso (api_access_token)
+          <input
+            type="password"
+            value={chatwootToken}
+            onChange={(e) => setChatwootToken(e.target.value)}
+            placeholder="cole o token do agente/bot"
+          />
+        </label>
+        <button type="submit" disabled={salvandoChatwoot}>
+          {salvandoChatwoot ? 'Salvando...' : 'Salvar Chatwoot'}
+        </button>
+        {avisoChatwoot && <p className={`aviso aviso-${avisoChatwoot.tipo}`}>{avisoChatwoot.texto}</p>}
       </form>
     </div>
   )

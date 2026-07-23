@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { CalledAnalysisResponse, CalledResponse, FilterCategory, IncidentType } from '../api/types'
+import { useConjuntoAlternavel } from '../hooks/useConjuntoAlternavel'
 
 const TODOS = 'TODOS'
 
@@ -19,7 +20,6 @@ export default function ChamadosApi({
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
   const [analises, setAnalises] = useState<Record<string, CalledAnalysisResponse>>({})
-  const [abertos, setAbertos] = useState<Set<string>>(new Set())
   const [analisando, setAnalisando] = useState<string | null>(null)
   const [feedbackDado, setFeedbackDado] = useState<Record<string, boolean>>({})
 
@@ -28,6 +28,18 @@ export default function ChamadosApi({
   const [filtroTipo, setFiltroTipo] = useState<IncidentType | typeof TODOS>(TODOS)
   const [filtroCategoria, setFiltroCategoria] = useState<FilterCategory | typeof TODOS>(TODOS)
 
+  // Mensagem gerada pela análise, editável antes de enviar ao Chatwoot.
+  const [mensagens, setMensagens] = useState<Record<string, string>>({})
+  const [editando, alternarEdicao] = useConjuntoAlternavel()
+
+  // Envio ao Chatwoot ainda depende do conversation_id ser informado na hora —
+  // não há (ainda) mapeamento automático chamado do Jira ↔ conversa do Chatwoot.
+  const [mostrandoEnvio, alternarEnvio, setMostrandoEnvio] = useConjuntoAlternavel()
+  const [conversationIds, setConversationIds] = useState<Record<string, string>>({})
+  const [enviando, setEnviando] = useState<Record<string, boolean>>({})
+  const [enviados, setEnviados] = useState<Record<string, boolean>>({})
+  const [erroEnvio, setErroEnvio] = useState<Record<string, string>>({})
+
   // Status vêm do Jira em texto livre (workflow customizado por projeto) — não há
   // enum fixo possível, então as opções do filtro são derivadas do que já carregou.
   const statusDisponiveis = useMemo(
@@ -35,27 +47,22 @@ export default function ChamadosApi({
     [calleds],
   )
 
-  const calledsFiltrados = calleds.filter((c) => {
-    if (filtroStatus !== TODOS && c.status !== filtroStatus) return false
-    if (filtroTipo !== TODOS && c.incidentType !== filtroTipo) return false
-    if (filtroCategoria !== TODOS && c.filterCategory !== filtroCategoria) return false
-    if (busca.trim()) {
-      const alvo = busca.trim().toLowerCase()
-      const combina =
-        c.jiraKey.toLowerCase().includes(alvo) || c.titleCalled.toLowerCase().includes(alvo)
-      if (!combina) return false
-    }
-    return true
-  })
-
-  const alternarAberto = (key: string, aberto?: boolean) =>
-    setAbertos((atual) => {
-      const proximo = new Set(atual)
-      const mostrar = aberto ?? !proximo.has(key)
-      if (mostrar) proximo.add(key)
-      else proximo.delete(key)
-      return proximo
-    })
+  const calledsFiltrados = useMemo(
+    () =>
+      calleds.filter((c) => {
+        if (filtroStatus !== TODOS && c.status !== filtroStatus) return false
+        if (filtroTipo !== TODOS && c.incidentType !== filtroTipo) return false
+        if (filtroCategoria !== TODOS && c.filterCategory !== filtroCategoria) return false
+        if (busca.trim()) {
+          const alvo = busca.trim().toLowerCase()
+          const combina =
+            c.jiraKey.toLowerCase().includes(alvo) || c.titleCalled.toLowerCase().includes(alvo)
+          if (!combina) return false
+        }
+        return true
+      }),
+    [calleds, filtroStatus, filtroTipo, filtroCategoria, busca],
+  )
 
   const carregar = async () => {
     setCarregando(true)
@@ -75,7 +82,9 @@ export default function ChamadosApi({
     const r = await window.backendAPI.analyzeCalled(key)
     if (r.ok) {
       setAnalises((a) => ({ ...a, [key]: r.data }))
-      alternarAberto(key, true)
+      setMensagens((m) => ({ ...m, [key]: r.data.solution ?? '' }))
+      setEnviados((e) => ({ ...e, [key]: false }))
+      setErroEnvio((e) => ({ ...e, [key]: '' }))
     } else setErro(r.error)
     setAnalisando(null)
   }
@@ -86,6 +95,38 @@ export default function ChamadosApi({
       setFeedbackDado((f) => ({ ...f, [key]: true }))
       onMudou?.()
     } else setErro(r.error)
+  }
+
+  const descartar = (key: string) => {
+    setAnalises((a) => {
+      const proximo = { ...a }
+      delete proximo[key]
+      return proximo
+    })
+    setMostrandoEnvio((s) => {
+      const n = new Set(s)
+      n.delete(key)
+      return n
+    })
+  }
+
+  const confirmarEnvio = async (key: string) => {
+    const conversationId = (conversationIds[key] ?? '').trim()
+    if (!conversationId) return
+    setEnviando((e) => ({ ...e, [key]: true }))
+    setErroEnvio((e) => ({ ...e, [key]: '' }))
+    const r = await window.backendAPI.sendChatwootMessage(conversationId, mensagens[key] ?? '')
+    if (r.ok) {
+      setEnviados((e) => ({ ...e, [key]: true }))
+      setMostrandoEnvio((s) => {
+        const n = new Set(s)
+        n.delete(key)
+        return n
+      })
+    } else {
+      setErroEnvio((e) => ({ ...e, [key]: r.error }))
+    }
+    setEnviando((e) => ({ ...e, [key]: false }))
   }
 
   return (
@@ -150,6 +191,8 @@ export default function ChamadosApi({
       <div className="lista-cards">
         {calledsFiltrados.map((c) => {
           const analise = analises[c.jiraKey]
+          const colapsado = !!analise
+
           return (
             <div
               key={c.jiraKey}
@@ -162,6 +205,7 @@ export default function ChamadosApi({
                 <strong>{c.jiraKey}</strong>
                 {c.status && <span className="tag">{c.status}</span>}
               </div>
+
               <p className="item-card-titulo">{c.titleCalled}</p>
               <div className="item-card-meta">
                 {c.routineNumber != null && <span>Rotina {c.routineNumber}</span>}
@@ -169,38 +213,108 @@ export default function ChamadosApi({
                 <span>{c.filterCategory}</span>
               </div>
 
-              {!analise ? (
+              {!colapsado ? (
                 <button
                   type="button"
-                  onClick={() => analisar(c.jiraKey)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    analisar(c.jiraKey)
+                  }}
                   disabled={analisando === c.jiraKey}
                 >
                   {analisando === c.jiraKey ? 'Analisando...' : '🔎 Analisar'}
                 </button>
               ) : (
-                <button
-                  type="button"
-                  className="btn-secundario"
-                  onClick={() => alternarAberto(c.jiraKey)}
-                >
-                  {abertos.has(c.jiraKey) ? '▲ Ocultar análise' : '▼ Ver análise'}
-                </button>
-              )}
-
-              {analise && abertos.has(c.jiraKey) && (
-                <div className="analise">
-                  <p>
-                    <strong>{analise.method}</strong> · score {analise.score.toFixed(2)} ·{' '}
-                    {analise.confidence}
+                <div className="chamado-resultado" onClick={(e) => e.stopPropagation()}>
+                  <p className="chamado-resultado-meta">
+                    {analise.method} · score {analise.score.toFixed(2)} · {analise.confidence}
                   </p>
-                  {analise.solution ? (
-                    <p className="analise-solucao">{analise.solution}</p>
+
+                  {editando.has(c.jiraKey) ? (
+                    <textarea
+                      className="chamado-mensagem-edicao"
+                      value={mensagens[c.jiraKey] ?? ''}
+                      onChange={(e) =>
+                        setMensagens((m) => ({ ...m, [c.jiraKey]: e.target.value }))
+                      }
+                      rows={4}
+                    />
+                  ) : (mensagens[c.jiraKey] ?? '').trim() ? (
+                    <p className="chamado-mensagem">{mensagens[c.jiraKey]}</p>
                   ) : (
                     <p className="painel-vazio">Nenhuma solução sugerida.</p>
                   )}
 
-                  {analise.standardId ? (
-                    feedbackDado[c.jiraKey] ? (
+                  {analise.confidence !== 'NONE' && (
+                    <>
+                      <div className="fontes-eyebrow">Fontes</div>
+                      <div className="fonte">
+                        <div className="fonte-cab">
+                          <span className="fonte-nome">🟢 Padrão verificado</span>
+                          <span className="tag tag-ok">{analise.confidence}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="chamado-acoes">
+                    <button type="button" onClick={() => alternarEnvio(c.jiraKey)}>
+                      📤 Enviar Webhook ao Chatwoot
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secundario"
+                      onClick={() => alternarEdicao(c.jiraKey)}
+                    >
+                      {editando.has(c.jiraKey) ? '✓ Concluir edição' : '✎ Editar mensagem de texto'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secundario"
+                      onClick={() => descartar(c.jiraKey)}
+                    >
+                      ✕ Descartar
+                    </button>
+                  </div>
+
+                  {mostrandoEnvio.has(c.jiraKey) && (
+                    <div className="chamado-envio-form">
+                      <input
+                        type="text"
+                        placeholder="conversation_id do Chatwoot"
+                        value={conversationIds[c.jiraKey] ?? ''}
+                        onChange={(e) =>
+                          setConversationIds((ids) => ({ ...ids, [c.jiraKey]: e.target.value }))
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => confirmarEnvio(c.jiraKey)}
+                        disabled={
+                          enviando[c.jiraKey] || !(conversationIds[c.jiraKey] ?? '').trim()
+                        }
+                      >
+                        {enviando[c.jiraKey] ? 'Enviando...' : 'Confirmar envio'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secundario"
+                        onClick={() => alternarEnvio(c.jiraKey)}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
+
+                  {enviados[c.jiraKey] && (
+                    <p className="aviso aviso-ok">Mensagem enviada ao Chatwoot.</p>
+                  )}
+                  {erroEnvio[c.jiraKey] && (
+                    <p className="aviso aviso-erro">{erroEnvio[c.jiraKey]}</p>
+                  )}
+
+                  {analise.standardId &&
+                    (feedbackDado[c.jiraKey] ? (
                       <p className="aviso aviso-ok">Feedback registrado. Obrigado!</p>
                     ) : (
                       <div className="feedback-botoes">
@@ -219,12 +333,7 @@ export default function ChamadosApi({
                           👎 Não
                         </button>
                       </div>
-                    )
-                  ) : (
-                    <p className="config-dica">
-                      Feedback indisponível: a análise não retornou o id do padrão.
-                    </p>
-                  )}
+                    ))}
                 </div>
               )}
             </div>
