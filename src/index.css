@@ -456,8 +456,12 @@ body,
   margin-bottom: 0.8rem;
 }
 
+/* Base compartilhada por todo campo de texto/select fora dos formulários de config
+   (chamados-filtros, edição de mensagem, envio ao Chatwoot). */
 .chamados-filtros input,
-.chamados-filtros select {
+.chamados-filtros select,
+.chamado-envio-form input,
+.chamado-mensagem-edicao {
   padding: 0.45rem 0.6rem;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
@@ -473,8 +477,19 @@ body,
   min-width: 140px;
 }
 
+.chamado-envio-form input,
+.chamado-mensagem-edicao {
+  width: 100%;
+}
+
+.chamado-mensagem-edicao {
+  resize: vertical;
+}
+
 .chamados-filtros input:focus,
-.chamados-filtros select:focus {
+.chamados-filtros select:focus,
+.chamado-envio-form input:focus,
+.chamado-mensagem-edicao:focus {
   border-color: var(--verde);
   box-shadow: 0 0 0 3px var(--verde-fraco);
 }
@@ -579,7 +594,8 @@ button:disabled {
   color: var(--verde-claro);
 }
 
-.aviso-erro {
+.aviso-erro,
+.tag-erro {
   background: rgba(248, 113, 113, 0.1);
   border-color: rgba(248, 113, 113, 0.3);
   color: #fca5a5;
@@ -785,12 +801,6 @@ button:disabled {
   color: #fcd34d;
 }
 
-.tag-erro {
-  background: rgba(248, 113, 113, 0.1);
-  border-color: rgba(248, 113, 113, 0.3);
-  color: #fca5a5;
-}
-
 /* Análise */
 .analise {
   border-top: 1px solid var(--border);
@@ -845,34 +855,10 @@ button:disabled {
   overflow: hidden;
 }
 
-.chamado-mensagem-edicao {
-  width: 100%;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  background: var(--bg-3);
-  color: var(--txt);
-  font: inherit;
-  font-size: 0.84rem;
-  resize: vertical;
-  outline: none;
-}
-
-.chamado-mensagem-edicao:focus {
-  border-color: var(--verde);
-  box-shadow: 0 0 0 3px var(--verde-fraco);
-}
-
 .chamado-acoes {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-}
-
-.chamado-acoes button {
-  width: 100%;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.76rem;
 }
 
 .chamado-envio-form {
@@ -881,23 +867,7 @@ button:disabled {
   gap: 0.35rem;
 }
 
-.chamado-envio-form input {
-  width: 100%;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  background: var(--bg-3);
-  color: var(--txt);
-  font: inherit;
-  font-size: 0.8rem;
-  outline: none;
-}
-
-.chamado-envio-form input:focus {
-  border-color: var(--verde);
-  box-shadow: 0 0 0 3px var(--verde-fraco);
-}
-
+.chamado-acoes button,
 .chamado-envio-form button {
   width: 100%;
   padding: 0.4rem 0.6rem;
@@ -912,7 +882,8 @@ button:disabled {
   color: var(--txt-3);
 }
 
-.fonte {
+.fonte,
+.doc-trecho {
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   background: var(--bg-3);
@@ -1030,13 +1001,6 @@ button:disabled {
   padding-top: 0.5rem;
   max-height: 260px;
   overflow-y: auto;
-}
-
-.doc-trecho {
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  background: var(--bg-3);
-  padding: 0.45rem 0.55rem;
 }
 
 .doc-trecho .tag {
