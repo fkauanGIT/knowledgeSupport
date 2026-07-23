@@ -28,6 +28,8 @@ contextBridge.exposeInMainWorld('bubbleAPI', {
   collapse: () => ipcRenderer.send('bubble:collapse'),
   moveBy: (dx: number, dy: number) => ipcRenderer.send('bubble:moveBy', dx, dy),
   quit: () => ipcRenderer.send('bubble:quit'),
+  fullscreen: () => ipcRenderer.send('bubble:fullscreen'),
+  restore: () => ipcRenderer.send('bubble:restore'),
 })
 
 // Ponte com a knowledgeSupport-api (o HTTP acontece no processo main;

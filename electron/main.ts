@@ -22,6 +22,7 @@ const APP_WIDTH = 1100
 const APP_HEIGHT = 700
 
 let win: BrowserWindow | null
+let boundsBeforeFullscreen: Electron.Rectangle | null = null
 
 /** Mantém uma janela (x, y, width, height) inteiramente dentro da área útil da tela. */
 function clampToWorkArea(x: number, y: number, width: number, height: number) {
@@ -86,6 +87,26 @@ function resizeAnchored(width: number, height: number) {
 
 ipcMain.on('bubble:expand', () => resizeAnchored(APP_WIDTH, APP_HEIGHT))
 ipcMain.on('bubble:collapse', () => resizeAnchored(BUBBLE_SIZE, BUBBLE_SIZE))
+
+/** Expande a janela para ocupar toda a área útil da tela onde ela está. */
+ipcMain.on('bubble:fullscreen', () => {
+  if (!win) return
+  boundsBeforeFullscreen = win.getBounds()
+  const { workArea } = screen.getDisplayMatching(win.getBounds())
+  win.setBounds(workArea)
+})
+
+/** Volta do modo tela cheia para o tamanho/posição anterior (ou o padrão do app). */
+ipcMain.on('bubble:restore', () => {
+  if (!win) return
+  if (boundsBeforeFullscreen) {
+    const b = boundsBeforeFullscreen
+    boundsBeforeFullscreen = null
+    win.setBounds(clampToWorkArea(b.x, b.y, b.width, b.height))
+  } else {
+    resizeAnchored(APP_WIDTH, APP_HEIGHT)
+  }
+})
 
 // Arrasto da bolinha: o renderer manda o delta do mouse, o main move a janela (com clamp).
 ipcMain.on('bubble:moveBy', (_event, dx: number, dy: number) => {

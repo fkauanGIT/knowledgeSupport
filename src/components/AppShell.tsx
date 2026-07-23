@@ -6,6 +6,8 @@ interface AppShellProps {
   onNavegar: (secao: Secao) => void
   onMinimizar: () => void
   onFechar: () => void
+  telaCheia: boolean
+  onAlternarTelaCheia: () => void
   painel: ReactNode
   children: ReactNode
 }
@@ -15,6 +17,8 @@ export default function AppShell({
   onNavegar,
   onMinimizar,
   onFechar,
+  telaCheia,
+  onAlternarTelaCheia,
   painel,
   children,
 }: AppShellProps) {
@@ -31,6 +35,13 @@ export default function AppShell({
         <div className="app-janela-botoes">
           <button type="button" onClick={onMinimizar} title="Minimizar para a bolha">
             –
+          </button>
+          <button
+            type="button"
+            onClick={onAlternarTelaCheia}
+            title={telaCheia ? 'Sair da tela cheia' : 'Tela cheia'}
+          >
+            {telaCheia ? '🗗' : '⛶'}
           </button>
           <button type="button" className="btn-fechar" onClick={onFechar} title="Fechar aplicativo">
             ×

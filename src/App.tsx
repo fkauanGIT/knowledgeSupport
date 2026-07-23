@@ -12,6 +12,7 @@ import type { CalledResponse } from './api/types'
 
 function App() {
   const [aberto, setAberto] = useState(false)
+  const [telaCheia, setTelaCheia] = useState(false)
   const [secao, setSecao] = useState<Secao>('home')
   const [selecionado, setSelecionado] = useState<CalledResponse | null>(null)
 
@@ -52,7 +53,17 @@ function App() {
 
   const minimizar = () => {
     setAberto(false)
+    setTelaCheia(false)
     window.bubbleAPI.collapse()
+  }
+
+  const alternarTelaCheia = () => {
+    if (telaCheia) {
+      window.bubbleAPI.restore()
+    } else {
+      window.bubbleAPI.fullscreen()
+    }
+    setTelaCheia(!telaCheia)
   }
 
   const navegar = (proxima: Secao) => {
@@ -78,6 +89,8 @@ function App() {
       onNavegar={navegar}
       onMinimizar={minimizar}
       onFechar={() => window.bubbleAPI.quit()}
+      telaCheia={telaCheia}
+      onAlternarTelaCheia={alternarTelaCheia}
       painel={
         <PainelDireito resumo={resumo} selecionado={selecionado} onRecarregar={recarregar} />
       }
