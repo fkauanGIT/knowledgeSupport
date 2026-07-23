@@ -3,6 +3,10 @@
 // 1. Sem CORS: o main é Node puro, não navegador.
 // 2. A API key nunca entra no renderer — fica no config do app, lida só aqui.
 // É o "adapter de saída" do desktop: o único lugar que conhece HTTP e a chave.
+//
+// Cliente central — só a knowledgeSupport-api (config, Jira, calleds, padrões).
+// Chatwoot e Documentação são integrações à parte, cada uma no seu próprio módulo
+// (chatwootClient.ts / documentacaoClient.ts), reaproveitando o `request` daqui.
 
 import { app, ipcMain } from 'electron'
 import path from 'node:path'
@@ -60,7 +64,12 @@ export async function extrairErro(response: Response): Promise<string> {
   }
 }
 
-async function request<T>(path_: string, init?: RequestInit): Promise<ApiResult<T>> {
+/**
+ * Chamada HTTP genérica pra knowledgeSupport-api. Aceita corpo JSON (padrão) ou um
+ * `FormData` pronto (upload multipart) — nesse caso não força o Content-Type, o
+ * fetch já monta o boundary correto sozinho.
+ */
+export async function request<T>(path_: string, init?: RequestInit): Promise<ApiResult<T>> {
   const config = await readConfig()
   if (!config.apiKey) {
     return { ok: false, status: 0, error: 'API key não configurada — abra Configurações.' }
@@ -68,10 +77,11 @@ async function request<T>(path_: string, init?: RequestInit): Promise<ApiResult<
   try {
     // Remove barra(s) no fim da URL base para não gerar "//api/..." (causa comum de 404/405).
     const baseUrl = config.apiUrl.replace(/\/+$/, '')
+    const isFormData = init?.body instanceof FormData
     const response = await fetch(`${baseUrl}${path_}`, {
       ...init,
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         'X-API-KEY': config.apiKey,
         ...init?.headers,
       },
@@ -94,12 +104,12 @@ async function request<T>(path_: string, init?: RequestInit): Promise<ApiResult<
   }
 }
 
-const get = (p: string) => request(p)
-const post = (p: string, body: unknown) =>
+export const get = (p: string) => request(p)
+export const post = (p: string, body: unknown) =>
   request(p, { method: 'POST', body: JSON.stringify(body) })
-const put = (p: string, body: unknown) =>
+export const put = (p: string, body: unknown) =>
   request(p, { method: 'PUT', body: JSON.stringify(body) })
-const del = (p: string) => request(p, { method: 'DELETE' })
+export const del = (p: string) => request(p, { method: 'DELETE' })
 
 /** Registra os canais IPC da knowledgeSupport-api (config, Jira, calleds, padrões). */
 export function registerApiHandlers() {

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { registerApiHandlers } from './apiClient'
 import { registerChatwootHandlers } from './chatwootClient'
+import { registerDocumentacaoHandlers } from './documentacaoClient'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -17,6 +18,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 // Integração com a knowledgeSupport-api (config persistida + todas as rotas)
 registerApiHandlers()
 registerChatwootHandlers()
+registerDocumentacaoHandlers()
 
 // Dimensões da bolha (lançador) e da janela do app
 const BUBBLE_SIZE = 64

@@ -126,3 +126,33 @@ export interface GapReportResponse {
   totalWithoutMatch: number
   gapsByRoutine: RoutineGapResponse[]
 }
+
+// ---------- Documentação (indexação e busca na knowledgeSupport-api) ----------
+
+export interface DocumentoMeta {
+  id: string
+  nome: string
+  tipo: 'pdf' | 'docx'
+  totalTrechos: number
+  status: 'indexado' | 'falhou'
+  erro?: string
+  indexadoEm: string
+}
+
+export interface TrechoEncontrado {
+  docId: string
+  docNome: string
+  pagina: number | null
+  texto: string
+  relevancia: number
+}
+
+export interface TrechoDocumento {
+  pagina: number | null
+  texto: string
+}
+
+export interface ChamadoRelacionado {
+  chave: string
+  relevancia: number
+}

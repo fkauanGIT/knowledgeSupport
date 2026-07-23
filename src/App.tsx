@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard'
 import PainelDireito from './components/PainelDireito'
 import ChamadosApi from './components/ChamadosApi'
 import PadroesPanel from './components/PadroesPanel'
+import DocumentacaoPanel from './components/DocumentacaoPanel'
 import LacunasPanel from './components/LacunasPanel'
 import ConfigPanel from './components/ConfigPanel'
 import { useResumo } from './hooks/useResumo'
@@ -106,6 +107,8 @@ function App() {
       )}
 
       {secao === 'padroes' && <PadroesPanel onMudou={recarregar} />}
+
+      {secao === 'documentacao' && <DocumentacaoPanel />}
 
       {secao === 'lacunas' && <LacunasPanel />}
 

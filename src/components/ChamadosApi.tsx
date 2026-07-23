@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { CalledAnalysisResponse, CalledResponse, FilterCategory, IncidentType } from '../api/types'
+import type {
+  CalledAnalysisResponse,
+  CalledResponse,
+  FilterCategory,
+  IncidentType,
+  TrechoEncontrado,
+} from '../api/types'
 import { useConjuntoAlternavel } from '../hooks/useConjuntoAlternavel'
 
 const TODOS = 'TODOS'
@@ -40,6 +46,9 @@ export default function ChamadosApi({
   const [enviados, setEnviados] = useState<Record<string, boolean>>({})
   const [erroEnvio, setErroEnvio] = useState<Record<string, string>>({})
 
+  // Trechos da documentação local (busca por palavra-chave) encontrados na análise.
+  const [fontes, setFontes] = useState<Record<string, TrechoEncontrado[]>>({})
+
   // Status vêm do Jira em texto livre (workflow customizado por projeto) — não há
   // enum fixo possível, então as opções do filtro são derivadas do que já carregou.
   const statusDisponiveis = useMemo(
@@ -79,13 +88,25 @@ export default function ChamadosApi({
 
   const analisar = async (key: string) => {
     setAnalisando(key)
-    const r = await window.backendAPI.analyzeCalled(key)
+
+    // A busca na documentação não depende do resultado da análise (só do título/erro
+    // já carregados), então as duas chamadas saem em paralelo em vez de uma esperar a outra.
+    const chamado = calleds.find((c) => c.jiraKey === key)
+    const consulta = [chamado?.titleCalled, chamado?.errorName].filter(Boolean).join(' ')
+    const [r, rf] = await Promise.all([
+      window.backendAPI.analyzeCalled(key),
+      consulta ? window.backendAPI.buscarNaDocumentacao(consulta) : Promise.resolve(null),
+    ])
+
     if (r.ok) {
       setAnalises((a) => ({ ...a, [key]: r.data }))
       setMensagens((m) => ({ ...m, [key]: r.data.solution ?? '' }))
       setEnviados((e) => ({ ...e, [key]: false }))
       setErroEnvio((e) => ({ ...e, [key]: '' }))
-    } else setErro(r.error)
+      if (rf?.ok) setFontes((f) => ({ ...f, [key]: rf.data }))
+    } else {
+      setErro(r.error)
+    }
     setAnalisando(null)
   }
 
@@ -192,6 +213,7 @@ export default function ChamadosApi({
         {calledsFiltrados.map((c) => {
           const analise = analises[c.jiraKey]
           const colapsado = !!analise
+          const temPadraoConfirmado = !!analise && analise.confidence !== 'NONE'
 
           return (
             <div
@@ -245,17 +267,31 @@ export default function ChamadosApi({
                     <p className="painel-vazio">Nenhuma solução sugerida.</p>
                   )}
 
-                  {analise.confidence !== 'NONE' && (
-                    <>
-                      <div className="fontes-eyebrow">Fontes</div>
-                      <div className="fonte">
-                        <div className="fonte-cab">
-                          <span className="fonte-nome">🟢 Padrão verificado</span>
-                          <span className="tag tag-ok">{analise.confidence}</span>
-                        </div>
-                      </div>
-                    </>
+                  {(temPadraoConfirmado || (fontes[c.jiraKey]?.length ?? 0) > 0) && (
+                    <div className="fontes-eyebrow">Fontes</div>
                   )}
+
+                  {temPadraoConfirmado && (
+                    <div className="fonte">
+                      <div className="fonte-cab">
+                        <span className="fonte-nome">🟢 Padrão verificado</span>
+                        <span className="tag tag-ok">{analise.confidence}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {(fontes[c.jiraKey] ?? []).map((f, i) => (
+                    <div className="fonte" key={i}>
+                      <div className="fonte-cab">
+                        <span className="fonte-nome">
+                          🟣 {f.docNome}
+                          {f.pagina != null ? ` · pág. ${f.pagina}` : ''}
+                        </span>
+                        <span className="fonte-rel">{f.relevancia}% relevância</span>
+                      </div>
+                      <p className="fonte-cita">"{f.texto}"</p>
+                    </div>
+                  ))}
 
                   <div className="chamado-acoes">
                     <button type="button" onClick={() => alternarEnvio(c.jiraKey)}>

@@ -5,7 +5,9 @@ import type {
   AppConfig,
   CalledAnalysisResponse,
   CalledResponse,
+  ChamadoRelacionado,
   ChatwootMessageResponse,
+  DocumentoMeta,
   FeedbackResponse,
   GapReportResponse,
   JiraSettings,
@@ -13,6 +15,8 @@ import type {
   StandardAccuracyResponse,
   StandardRequest,
   StandardResponse,
+  TrechoDocumento,
+  TrechoEncontrado,
 } from '../api/types'
 
 declare global {
@@ -36,6 +40,14 @@ declare global {
         conversationId: string,
         content: string,
       ) => Promise<ApiResult<ChatwootMessageResponse>>
+
+      selecionarArquivosDoc: () => Promise<ApiResult<string[]>>
+      uploadDocumento: (caminho: string) => Promise<ApiResult<DocumentoMeta>>
+      listarDocumentos: () => Promise<ApiResult<DocumentoMeta[]>>
+      removerDocumento: (id: string) => Promise<ApiResult<void>>
+      obterTrechosDocumento: (docId: string) => Promise<ApiResult<TrechoDocumento[]>>
+      chamadosRelacionadosDocumento: (docId: string) => Promise<ApiResult<ChamadoRelacionado[]>>
+      buscarNaDocumentacao: (consulta: string) => Promise<ApiResult<TrechoEncontrado[]>>
 
       listStandards: () => Promise<ApiResult<StandardResponse[]>>
       getStandard: (id: string) => Promise<ApiResult<StandardResponse>>

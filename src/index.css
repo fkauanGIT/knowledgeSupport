@@ -26,6 +26,10 @@
   --alerta: #f59e0b;
   --erro: #f87171;
 
+  --roxo: #8b8cf7;
+  --roxo-claro: #a5a6fb;
+  --roxo-fraco: rgba(139, 140, 247, 0.14);
+
   --r-sm: 8px;
   --r: 12px;
   --r-lg: 16px;
@@ -781,6 +785,12 @@ button:disabled {
   color: #fcd34d;
 }
 
+.tag-erro {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #fca5a5;
+}
+
 /* Análise */
 .analise {
   border-top: 1px solid var(--border);
@@ -919,6 +929,118 @@ button:disabled {
 .fonte-nome {
   font-size: 0.78rem;
   font-weight: 600;
+}
+
+.fonte-rel {
+  flex-shrink: 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--roxo-claro);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fonte-cita {
+  margin: 0.35rem 0 0;
+  padding: 0.4rem 0.55rem;
+  border-left: 2px solid var(--roxo);
+  background: var(--roxo-fraco);
+  font-size: 0.74rem;
+  color: var(--txt-2);
+  font-style: italic;
+  line-height: 1.45;
+}
+
+/* Documentação (indexação e busca na knowledgeSupport-api) */
+.dropzone {
+  border: 1.5px dashed var(--border-forte);
+  border-radius: var(--r);
+  padding: 0.9rem;
+  text-align: center;
+  color: var(--txt-2);
+  font-size: 0.82rem;
+  margin-bottom: 0.9rem;
+  background: var(--bg-2);
+}
+
+.dropzone strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--txt);
+}
+
+.doc-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.doc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--bg-2);
+  padding: 0.6rem 0.75rem;
+}
+
+.doc-card-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.doc-icone {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  background: var(--bg-3);
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.doc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-nome {
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-meta {
+  font-size: 0.72rem;
+  color: var(--txt-3);
+  margin-top: 0.1rem;
+}
+
+.doc-trechos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.doc-trecho {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-3);
+  padding: 0.45rem 0.55rem;
+}
+
+.doc-trecho .tag {
+  margin-bottom: 0.3rem;
 }
 
 /* Lacunas */

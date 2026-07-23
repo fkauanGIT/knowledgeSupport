@@ -51,6 +51,17 @@ contextBridge.exposeInMainWorld('backendAPI', {
   sendChatwootMessage: (conversationId: string, content: string) =>
     ipcRenderer.invoke('chatwoot:sendMessage', conversationId, content),
 
+  selecionarArquivosDoc: () => ipcRenderer.invoke('docs:selectFiles'),
+  uploadDocumento: (caminho: string) => ipcRenderer.invoke('api:documentacao:upload', caminho),
+  listarDocumentos: () => ipcRenderer.invoke('api:documentacao:list'),
+  removerDocumento: (id: string) => ipcRenderer.invoke('api:documentacao:delete', id),
+  obterTrechosDocumento: (docId: string) =>
+    ipcRenderer.invoke('api:documentacao:trechos', docId),
+  chamadosRelacionadosDocumento: (docId: string) =>
+    ipcRenderer.invoke('api:documentacao:chamadosRelacionados', docId),
+  buscarNaDocumentacao: (consulta: string) =>
+    ipcRenderer.invoke('api:documentacao:buscar', consulta),
+
   listStandards: () => ipcRenderer.invoke('api:standards:list'),
   getStandard: (id: string) => ipcRenderer.invoke('api:standards:get', id),
   createStandard: (body: unknown) => ipcRenderer.invoke('api:standards:create', body),
