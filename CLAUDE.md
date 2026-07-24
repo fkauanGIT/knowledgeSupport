@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 There is no test framework configured in this project (no jest/vitest/playwright, no test script).
 
-The app requires the separate `knowledgeSupport-api` backend running (default `http://localhost:8080`) to do anything useful — configure its URL and `X-API-KEY` from the app's Configurações panel on first run (persisted to `config.json` in the Electron userData dir, not in source or env files).
+The app requires the separate `knowledgeSupport-api` backend running (default `http://localhost:8080`) to do anything useful — configure its URL and `X-API-KEY` from the app's Settings panel on first run (persisted to `config.json` in the Electron userData dir, not in source or env files).
 
 ## Architecture
 
@@ -27,13 +27,13 @@ The IPC type contract is split across two files: `electron/electron-env.d.ts` (w
 
 ### Renderer structure (`src/`)
 
-No router library — navigation is a plain `useState<Secao>` in `App.tsx`, driven by `src/navegacao.ts` (`type Secao` + the `NAV` array), which is the single source of truth for sidebar sections consumed by `AppShell.tsx`. `App.tsx` also holds cross-panel state that would otherwise need prop-drilling through a store: `aberto` (bubble vs. expanded window) and `selecionado` (the currently selected chamado, shared between the chamados list panel and `PainelDireito.tsx`'s detail view).
+No router library — navigation is a plain `useState<Section>` in `App.tsx`, driven by `src/navigation.ts` (`type Section` + the `NAV` array), which is the single source of truth for sidebar sections consumed by `AppShell.tsx`. `App.tsx` also holds cross-panel state that would otherwise need prop-drilling through a store: `open` (bubble vs. expanded window) and `selected` (the currently selected called, shared between the tickets list panel and `RightPanel.tsx`'s detail view).
 
-`src/hooks/useResumo.ts` is the shared-data hook: it fetches calleds/standards/gap-report/Jira-settings in parallel and reduces them into one `Resumo` object, called once in `App.tsx` and threaded into `Dashboard.tsx` and `PainelDireito.tsx` so they don't each issue their own requests. Feature panels (`ChamadosApi.tsx`, `PadroesPanel.tsx`, `LacunasPanel.tsx`, `ConfigPanel.tsx`) call an `onMudou?.()` callback after mutations, wired to `useResumo`'s `recarregar`, to keep the summary in sync without a global store.
+`src/hooks/useSummary.ts` is the shared-data hook: it fetches calleds/standards/gap-report/Jira-settings in parallel and reduces them into one `Summary` object, called once in `App.tsx` and threaded into `Dashboard.tsx` and `RightPanel.tsx` so they don't each issue their own requests. Feature panels (`TicketsApi.tsx`, `StandardsPanel.tsx`, `GapsPanel.tsx`, `ConfigPanel.tsx`) call an `onChange?.()` callback after mutations, wired to `useSummary`'s `reload`, to keep the summary in sync without a global store.
 
-Despite its name, `src/components/ChamadosApi.tsx` is a feature panel (the "Chamados" section UI), not an API client — the actual client lives in `electron/apiClient.ts` (main process). All feature panels follow the same shape: local `useState` for list/loading/error/form, `useEffect` → load on mount, CRUD actions call `window.backendAPI.*` then reload and notify `onMudou`.
+Despite its name, `src/components/TicketsApi.tsx` is a feature panel (the "Tickets" section UI), not an API client — the actual client lives in `electron/apiClient.ts` (main process). All feature panels follow the same shape: local `useState` for list/loading/error/form, `useEffect` → load on mount, CRUD actions call `window.backendAPI.*` then reload and notify `onChange`.
 
-Styling is one global `src/index.css` (no Tailwind/CSS Modules) using CSS custom properties for a dark/emerald design-token layer and shared Portuguese BEM-ish class names (`.dash-card`, `.item-card`, `.painel-bloco`, etc.) across all panels. The window itself is frameless/transparent, matching `main.ts`'s `frame: false, transparent: true`; drag regions use `-webkit-app-region`.
+Styling is one global `src/index.css` (no Tailwind/CSS Modules) using CSS custom properties for a dark/emerald design-token layer and shared BEM-ish class names (`.dash-card`, `.item-card`, `.panel-block`, etc.) across all panels. The window itself is frameless/transparent, matching `main.ts`'s `frame: false, transparent: true`; drag regions use `-webkit-app-region`.
 
 ### Repo layout note
 

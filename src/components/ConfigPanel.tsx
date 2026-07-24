@@ -1,30 +1,30 @@
 import { useEffect, useState, FormEvent } from 'react'
 import type { JiraSettings } from '../api/types'
 
-type Aviso = { tipo: 'ok' | 'erro'; texto: string } | null
+type Notice = { type: 'ok' | 'error'; text: string } | null
 
 export default function ConfigPanel() {
-  // --- Config do desktop (URL da API + X-API-KEY) ---
+  // --- Desktop config (API URL + X-API-KEY) ---
   const [apiUrl, setApiUrl] = useState('')
   const [apiKey, setApiKey] = useState('')
-  const [avisoDesktop, setAvisoDesktop] = useState<Aviso>(null)
-  const [salvandoDesktop, setSalvandoDesktop] = useState(false)
+  const [desktopNotice, setDesktopNotice] = useState<Notice>(null)
+  const [savingDesktop, setSavingDesktop] = useState(false)
 
-  // --- Config do Jira (via API) ---
+  // --- Jira config (via API) ---
   const [jira, setJira] = useState<JiraSettings | null>(null)
   const [baseUrl, setBaseUrl] = useState('')
   const [email, setEmail] = useState('')
   const [jql, setJql] = useState('')
   const [apiToken, setApiToken] = useState('')
-  const [avisoJira, setAvisoJira] = useState<Aviso>(null)
-  const [salvandoJira, setSalvandoJira] = useState(false)
+  const [jiraNotice, setJiraNotice] = useState<Notice>(null)
+  const [savingJira, setSavingJira] = useState(false)
 
-  // --- Config do Chatwoot (envio de mensagens) ---
+  // --- Chatwoot config (message sending) ---
   const [chatwootUrl, setChatwootUrl] = useState('')
   const [chatwootAccountId, setChatwootAccountId] = useState('')
   const [chatwootToken, setChatwootToken] = useState('')
-  const [avisoChatwoot, setAvisoChatwoot] = useState<Aviso>(null)
-  const [salvandoChatwoot, setSalvandoChatwoot] = useState(false)
+  const [chatwootNotice, setChatwootNotice] = useState<Notice>(null)
+  const [savingChatwoot, setSavingChatwoot] = useState(false)
 
   useEffect(() => {
     window.backendAPI.getConfig().then((cfg) => {
@@ -34,54 +34,54 @@ export default function ConfigPanel() {
       setChatwootAccountId(cfg.chatwootAccountId)
       setChatwootToken(cfg.chatwootToken)
     })
-    carregarJira()
+    loadJira()
   }, [])
 
-  const carregarJira = async () => {
+  const loadJira = async () => {
     const r = await window.backendAPI.getJiraSettings()
     if (r.ok) {
       setJira(r.data)
       setBaseUrl(r.data.baseUrl)
       setEmail(r.data.email)
       setJql(r.data.jql)
-      setAvisoJira(null)
+      setJiraNotice(null)
     } else {
       setJira(null)
-      setAvisoJira({ tipo: 'erro', texto: r.error })
+      setJiraNotice({ type: 'error', text: r.error })
     }
   }
 
-  const salvarDesktop = async (e: FormEvent) => {
+  const saveDesktop = async (e: FormEvent) => {
     e.preventDefault()
-    setSalvandoDesktop(true)
+    setSavingDesktop(true)
     try {
       await window.backendAPI.setConfig({ apiUrl: apiUrl.trim(), apiKey: apiKey.trim() })
-      setAvisoDesktop({ tipo: 'ok', texto: 'Configuração salva.' })
-      await carregarJira()
+      setDesktopNotice({ type: 'ok', text: 'Configuration saved.' })
+      await loadJira()
     } finally {
-      setSalvandoDesktop(false)
+      setSavingDesktop(false)
     }
   }
 
-  const salvarChatwoot = async (e: FormEvent) => {
+  const saveChatwoot = async (e: FormEvent) => {
     e.preventDefault()
-    setSalvandoChatwoot(true)
+    setSavingChatwoot(true)
     try {
       await window.backendAPI.setConfig({
         chatwootUrl: chatwootUrl.trim(),
         chatwootAccountId: chatwootAccountId.trim(),
         chatwootToken: chatwootToken.trim(),
       })
-      setAvisoChatwoot({ tipo: 'ok', texto: 'Configuração do Chatwoot salva.' })
+      setChatwootNotice({ type: 'ok', text: 'Chatwoot configuration saved.' })
     } finally {
-      setSalvandoChatwoot(false)
+      setSavingChatwoot(false)
     }
   }
 
-  const salvarJira = async (e: FormEvent) => {
+  const saveJira = async (e: FormEvent) => {
     e.preventDefault()
-    setSalvandoJira(true)
-    setAvisoJira(null)
+    setSavingJira(true)
+    setJiraNotice(null)
     try {
       const r = await window.backendAPI.setJiraSettings({
         baseUrl: baseUrl.trim(),
@@ -92,21 +92,21 @@ export default function ConfigPanel() {
       if (r.ok) {
         setJira(r.data)
         setApiToken('')
-        setAvisoJira({ tipo: 'ok', texto: 'Config do Jira atualizada.' })
+        setJiraNotice({ type: 'ok', text: 'Jira config updated.' })
       } else {
-        setAvisoJira({ tipo: 'erro', texto: r.error })
+        setJiraNotice({ type: 'error', text: r.error })
       }
     } finally {
-      setSalvandoJira(false)
+      setSavingJira(false)
     }
   }
 
   return (
     <div className="config">
-      <form className="config-secao" onSubmit={salvarDesktop}>
-        <h2>Conexão com a API</h2>
+      <form className="config-section" onSubmit={saveDesktop}>
+        <h2>API connection</h2>
         <label>
-          URL da API
+          API URL
           <input
             value={apiUrl}
             onChange={(e) => setApiUrl(e.target.value)}
@@ -114,54 +114,54 @@ export default function ConfigPanel() {
           />
         </label>
         <label>
-          Chave de acesso (X-API-KEY)
+          Access key (X-API-KEY)
           <input
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="sua chave da API"
+            placeholder="your API key"
           />
         </label>
-        <button type="submit" disabled={salvandoDesktop}>
-          {salvandoDesktop ? 'Salvando...' : 'Salvar conexão'}
+        <button type="submit" disabled={savingDesktop}>
+          {savingDesktop ? 'Saving...' : 'Save connection'}
         </button>
-        {avisoDesktop && <p className={`aviso aviso-${avisoDesktop.tipo}`}>{avisoDesktop.texto}</p>}
+        {desktopNotice && <p className={`notice notice-${desktopNotice.type}`}>{desktopNotice.text}</p>}
       </form>
 
-      <form className="config-secao" onSubmit={salvarJira}>
-        <h2>Token do Jira</h2>
-        <p className="config-dica">
-          Renove o token aqui quando expirar — sem editar o .env nem reiniciar a API.
+      <form className="config-section" onSubmit={saveJira}>
+        <h2>Jira token</h2>
+        <p className="config-tip">
+          Renew the token here when it expires — no need to edit .env or restart the API.
         </p>
         <label>
-          URL base do Jira
+          Jira base URL
           <input
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder="https://sua-empresa.atlassian.net"
+            placeholder="https://your-company.atlassian.net"
           />
         </label>
         <label>
-          E-mail da conta
+          Account email
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="voce@empresa.com"
+            placeholder="you@company.com"
           />
         </label>
         <label>
-          Token da API do Atlassian
+          Atlassian API token
           <input
             type="password"
             value={apiToken}
             onChange={(e) => setApiToken(e.target.value)}
             placeholder={
-              jira?.tokenConfigured ? '•••••• (deixe em branco p/ manter)' : 'cole o novo token'
+              jira?.tokenConfigured ? '•••••• (leave blank to keep it)' : 'paste the new token'
             }
           />
         </label>
         <label>
-          JQL (filtro dos chamados)
+          JQL (ticket filter)
           <input
             value={jql}
             onChange={(e) => setJql(e.target.value)}
@@ -170,24 +170,24 @@ export default function ConfigPanel() {
         </label>
         {jira && (
           <p className="config-status">
-            Token atual: {jira.tokenConfigured ? '✅ configurado' : '⚠️ não configurado'}
+            Current token: {jira.tokenConfigured ? '✅ configured' : '⚠️ not configured'}
           </p>
         )}
-        <button type="submit" disabled={salvandoJira}>
-          {salvandoJira ? 'Salvando...' : 'Salvar Jira'}
+        <button type="submit" disabled={savingJira}>
+          {savingJira ? 'Saving...' : 'Save Jira'}
         </button>
-        {avisoJira && <p className={`aviso aviso-${avisoJira.tipo}`}>{avisoJira.texto}</p>}
+        {jiraNotice && <p className={`notice notice-${jiraNotice.type}`}>{jiraNotice.text}</p>}
       </form>
 
-      <form className="config-secao" onSubmit={salvarChatwoot}>
+      <form className="config-section" onSubmit={saveChatwoot}>
         <h2>Chatwoot</h2>
-        <p className="config-dica">
-          Usado para enviar a mensagem gerada pela análise a uma conversa do Chatwoot. O
-          conversation_id ainda é informado manualmente na hora do envio — não há (ainda) um
-          mapeamento automático entre chamado do Jira e conversa do Chatwoot.
+        <p className="config-tip">
+          Used to send the message generated by the analysis to a Chatwoot conversation. The
+          conversation_id is still entered manually at send time — there's no (yet) automatic
+          mapping between a Jira ticket and a Chatwoot conversation.
         </p>
         <label>
-          URL do Chatwoot
+          Chatwoot URL
           <input
             value={chatwootUrl}
             onChange={(e) => setChatwootUrl(e.target.value)}
@@ -203,18 +203,18 @@ export default function ConfigPanel() {
           />
         </label>
         <label>
-          Token de acesso (api_access_token)
+          Access token (api_access_token)
           <input
             type="password"
             value={chatwootToken}
             onChange={(e) => setChatwootToken(e.target.value)}
-            placeholder="cole o token do agente/bot"
+            placeholder="paste the agent/bot token"
           />
         </label>
-        <button type="submit" disabled={salvandoChatwoot}>
-          {salvandoChatwoot ? 'Salvando...' : 'Salvar Chatwoot'}
+        <button type="submit" disabled={savingChatwoot}>
+          {savingChatwoot ? 'Saving...' : 'Save Chatwoot'}
         </button>
-        {avisoChatwoot && <p className={`aviso aviso-${avisoChatwoot.tipo}`}>{avisoChatwoot.texto}</p>}
+        {chatwootNotice && <p className={`notice notice-${chatwootNotice.type}`}>{chatwootNotice.text}</p>}
       </form>
     </div>
   )

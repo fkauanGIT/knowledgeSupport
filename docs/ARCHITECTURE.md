@@ -1,57 +1,63 @@
-# Arquitetura — knowledgeSupport Desktop
+# Architecture — knowledgeSupport Desktop
 
-Este documento descreve como o app de desktop é organizado e por quê. O foco é a separação
-entre os processos do Electron e o fluxo de dados até a knowledgeSupport-api.
+This document describes how the desktop app is organized and why. The focus is the separation
+between Electron's processes and the data flow to knowledgeSupport-api.
 
-![Arquitetura](assets/architecture.svg)
+![Architecture](assets/architecture.svg)
 
-## Os três processos
+## The three processes
 
-O Electron separa o app em processos com responsabilidades distintas. Aqui eles mapeiam para
-uma fronteira de segurança clara.
+Electron splits the app into processes with distinct responsibilities. Here they map to a
+clear security boundary.
 
 ### Renderer (`src/`)
 
-A interface React. É o único lugar com JSX e estado de UI. **Não** faz HTTP direto nem conhece
-a `X-API-KEY` ou o token do Jira — tudo passa por `window.backendAPI` e `window.bubbleAPI`,
-injetados pelo preload.
+The React interface. The only place with JSX and UI state. It **doesn't** make direct HTTP
+calls or know the `X-API-KEY` or Jira token — everything goes through `window.backendAPI` and
+`window.bubbleAPI`, injected by preload.
 
-Componentes principais:
+Main components:
 
-- `App.tsx` — alterna entre a bolha (lançador arrastável) e a janela do app; guarda a seção
-  ativa e o chamado selecionado.
-- `components/AppShell.tsx` — o layout: barra superior, sidebar de navegação, conteúdo e
-  painel lateral direito.
-- `components/Dashboard.tsx` — a Home, com os cards de resumo.
-- `components/ChamadosApi.tsx` — chamados do Jira (listar, analisar, feedback).
-- `components/PadroesPanel.tsx` — CRUD de padrões + acurácia.
-- `components/LacunasPanel.tsx` — relatório de lacunas.
-- `components/ConfigPanel.tsx` — conexão com a API e token do Jira.
-- `components/PainelDireito.tsx` — status da conexão e detalhe do chamado selecionado.
-- `hooks/useResumo.ts` — consolida os números que a Home e o painel direito compartilham.
-- `navegacao.ts` — fonte única das seções (sidebar + cabeçalho).
+- `App.tsx` — switches between the bubble (draggable launcher) and the app window; holds the
+  active section and the selected ticket.
+- `components/AppShell.tsx` — the layout: top bar, navigation sidebar, content and right-side panel.
+- `components/Dashboard.tsx` — the Home, with the summary cards and the ticket charts
+  (`TicketsChart.tsx`, Recharts): one covering the whole period, another filterable by date and
+  assignee.
+- `components/TicketsApi.tsx` — Jira tickets (list, analyze, feedback), with an open-state
+  filter (open/closed/all, resolved server-side via `onlyOpen`).
+- `components/StandardsPanel.tsx` — knowledge-base CRUD + accuracy.
+- `components/GapsPanel.tsx` — gap report.
+- `components/ConfigPanel.tsx` — API connection and Jira token.
+- `components/RightPanel.tsx` — connection status and detail of the selected ticket.
+- `hooks/useSummary.ts` — consolidates the numbers the Home and the right panel share.
+- `navigation.ts` — single source of truth for the sections (sidebar + header).
 
 ### Preload (`electron/preload.ts`)
 
-A ponte. Usa `contextBridge` para expor um conjunto pequeno e explícito de funções ao
-renderer, cada uma apenas repassando um `ipcRenderer.invoke`/`send` para um canal nomeado.
-É o contrato entre UI e main — nada além do que está aqui atravessa a fronteira.
+The bridge. Uses `contextBridge` to expose a small, explicit set of functions to the renderer,
+each one just forwarding an `ipcRenderer.invoke`/`send` to a named channel. It's the contract
+between UI and main — nothing beyond what's here crosses the boundary.
 
 ### Main (`electron/`)
 
-O processo Node. Concentra tudo que é "sistema": janelas, arquivos e HTTP.
+The Node process. Concentrates everything "system": windows, files and HTTP.
 
-- `main.ts` — cria a janela (nasce centralizada) e trata os canais da bolha (`bubble:*`):
-  abrir, minimizar, mover (arrasto) e sair. Ao redimensionar, ancora no centro atual em vez de
-  recentralizar, e mantém a janela dentro da área útil da tela.
-- `apiClient.ts` — o **adapter de saída**: o único lugar que conhece HTTP e a `X-API-KEY`.
-  Toda chamada volta como `{ ok, data }` ou `{ ok, error }`, então uma exceção nunca cruza o
-  IPC crua.
+- `main.ts` — creates the window (born centered) and handles the bubble channels (`bubble:*`):
+  open, minimize, move (drag) and quit. When resizing, it anchors on the current center instead
+  of recentering, and keeps the window inside the screen's work area.
+- `apiClient.ts` — the **outbound adapter**: the only place that knows HTTP and the
+  `X-API-KEY`. Every call comes back as `{ ok, data }` or `{ ok, error }`, so an exception never
+  crosses the IPC boundary raw. `listCalleds` accepts an optional filter
+  (`createdFrom`/`createdTo`/`onlyOpen`/`assignee`) that becomes a query string — same shape as
+  the API's `CalledFilter`.
+- also exposes `bubble:getVersion` (via Electron's `app.getVersion()`), so the version shown in
+  the UI never goes stale/hardcoded.
 
-## Fluxo de uma chamada à API
+## Flow of an API call
 
 ```
-Componente React
+React component
   → window.backendAPI.listCalleds()          (preload)
     → ipcRenderer.invoke('api:calleds:list')
       → apiClient: GET {apiUrl}/api/calleds   (header X-API-KEY)
@@ -59,27 +65,37 @@ Componente React
       ← ApiResult<CalledResponse[]>
 ```
 
-Por que o HTTP fica no main e não no renderer? Dois motivos: **sem CORS** (o main é Node, não
-navegador) e **sem vazamento de segredo** (a `X-API-KEY` fica no `config.json` do app, lido só
-pelo `apiClient`; o renderer só vê resultados).
+Why does HTTP live in main and not in the renderer? Two reasons: **no CORS** (main is Node, not
+a browser) and **no secret leakage** (the `X-API-KEY` stays in the app's `config.json`, read
+only by `apiClient`; the renderer only ever sees results).
 
-## Token do Jira em runtime
+## Jira token at runtime
 
-O token do Atlassian expira. Antes, trocá-lo exigia editar o `.env` da API e reiniciar. Agora
-o painel **Configurações** chama `GET`/`PUT /api/settings/jira`, e a API troca as credenciais
-em memória (com override persistido em disco). O token nunca volta pela interface — o `GET`
-devolve apenas `tokenConfigured: true/false`. Do lado do desktop, isso são só mais dois canais
-IPC (`api:settings:jira:get` / `:set`) em `apiClient.ts`.
+The Atlassian token expires. Before, changing it meant editing the API's `.env` and
+restarting. Now the **Settings** panel calls `GET`/`PUT /api/settings/jira`, and the API swaps
+the credentials in memory (with the override persisted to disk). The token never comes back
+through the interface — the `GET` only returns `tokenConfigured: true/false`. On the desktop
+side, that's just two more IPC channels (`api:settings:jira:get` / `:set`) in `apiClient.ts`.
 
-## Onde os dados moram
+## Panels stay mounted across navigation
 
-- **Config do desktop** — `config.json` no `userData` (URL da API + `X-API-KEY`).
-- **Chamados do Jira, padrões, feedback, lacunas** — na knowledgeSupport-api (Jira + PostgreSQL).
+`App.tsx` renders every panel at once (visibility via CSS `display:none`), instead of
+mounting/unmounting on every section switch. Before, leaving "Tickets" and coming back
+discarded the component's state — refetching and losing the filters the user had set. The
+trade-off is that the first time the full window opens, the panels fetch their data in
+parallel instead of one at a time as the user navigates — more simultaneous calls at that
+moment, considerably fewer over the session.
 
-O app não tem mais base local: o Jira é a fonte de verdade dos chamados e o backend, a dos padrões.
+## Where the data lives
 
-## Tipos como contrato
+- **Desktop config** — `config.json` in `userData` (API URL + `X-API-KEY`).
+- **Jira tickets, standards, feedback, gaps** — in knowledgeSupport-api (Jira + PostgreSQL).
 
-`src/api/types.ts` espelha os DTOs da API (fonte: `/v3/api-docs`). Se a API mudar um contrato,
-este é o único arquivo de tipos a atualizar. `src/types/backend.d.ts` declara a superfície de
-`window.backendAPI` a partir desses tipos.
+The app no longer has a local database: Jira is the source of truth for tickets, and the
+backend is for standards.
+
+## Types as a contract
+
+`src/api/types.ts` mirrors the API's DTOs (source: `/v3/api-docs`). If the API changes a
+contract, this is the only types file to update. `src/types/backend.d.ts` declares the surface
+of `window.backendAPI` from these types.

@@ -6,14 +6,14 @@ import type {
   StandardResponse,
 } from '../api/types'
 
-const stepVazio: InvestigationStep = {
+const emptyStep: InvestigationStep = {
   hypothesis: '',
   query: '',
   verification: '',
   confirmed: false,
 }
 
-interface FormPadrao {
+interface StandardForm {
   standardName: string
   text: string
   result: string
@@ -22,7 +22,7 @@ interface FormPadrao {
   investigationSteps: InvestigationStep[]
 }
 
-const formVazio: FormPadrao = {
+const emptyForm: StandardForm = {
   standardName: '',
   text: '',
   result: '',
@@ -31,40 +31,40 @@ const formVazio: FormPadrao = {
   investigationSteps: [],
 }
 
-interface PadroesPanelProps {
-  /** Avisa o app que a base mudou, para atualizar o resumo. */
-  onMudou?: () => void
+interface StandardsPanelProps {
+  /** Tells the app the base changed, to refresh the summary. */
+  onChange?: () => void
 }
 
-export default function PadroesPanel({ onMudou }: PadroesPanelProps = {}) {
-  const [padroes, setPadroes] = useState<StandardResponse[]>([])
-  const [erro, setErro] = useState('')
-  const [carregando, setCarregando] = useState(false)
-  const [form, setForm] = useState<FormPadrao>(formVazio)
-  const [editandoId, setEditandoId] = useState<string | null>(null)
-  const [salvando, setSalvando] = useState(false)
-  const [acuracia, setAcuracia] = useState<Record<string, StandardAccuracyResponse>>({})
+export default function StandardsPanel({ onChange }: StandardsPanelProps = {}) {
+  const [standards, setStandards] = useState<StandardResponse[]>([])
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState<StandardForm>(emptyForm)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [accuracy, setAccuracy] = useState<Record<string, StandardAccuracyResponse>>({})
 
-  const carregar = async () => {
-    setCarregando(true)
-    setErro('')
+  const load = async () => {
+    setLoading(true)
+    setError('')
     const r = await window.backendAPI.listStandards()
-    if (r.ok) setPadroes(r.data)
-    else setErro(r.error)
-    setCarregando(false)
+    if (r.ok) setStandards(r.data)
+    else setError(r.error)
+    setLoading(false)
   }
 
   useEffect(() => {
-    carregar()
+    load()
   }, [])
 
   const resetForm = () => {
-    setForm(formVazio)
-    setEditandoId(null)
+    setForm(emptyForm)
+    setEditingId(null)
   }
 
-  const editar = (p: StandardResponse) => {
-    setEditandoId(p.id)
+  const edit = (p: StandardResponse) => {
+    setEditingId(p.id)
     setForm({
       standardName: p.standardName,
       text: p.text,
@@ -75,10 +75,10 @@ export default function PadroesPanel({ onMudou }: PadroesPanelProps = {}) {
     })
   }
 
-  const salvar = async (e: FormEvent) => {
+  const save = async (e: FormEvent) => {
     e.preventDefault()
-    setSalvando(true)
-    setErro('')
+    setSaving(true)
+    setError('')
     const body = {
       standardName: form.standardName,
       text: form.text,
@@ -87,49 +87,49 @@ export default function PadroesPanel({ onMudou }: PadroesPanelProps = {}) {
       routineNumber: form.routineNumber.trim() ? Number(form.routineNumber) : null,
       investigationSteps: form.investigationSteps,
     }
-    const r = editandoId
-      ? await window.backendAPI.updateStandard(editandoId, body)
+    const r = editingId
+      ? await window.backendAPI.updateStandard(editingId, body)
       : await window.backendAPI.createStandard(body)
     if (r.ok) {
       resetForm()
-      await carregar()
-      onMudou?.()
+      await load()
+      onChange?.()
     } else {
-      setErro(r.error)
+      setError(r.error)
     }
-    setSalvando(false)
+    setSaving(false)
   }
 
-  const excluir = async (id: string) => {
+  const remove = async (id: string) => {
     const r = await window.backendAPI.deleteStandard(id)
     if (r.ok) {
-      if (editandoId === id) resetForm()
-      await carregar()
-      onMudou?.()
-    } else setErro(r.error)
+      if (editingId === id) resetForm()
+      await load()
+      onChange?.()
+    } else setError(r.error)
   }
 
-  const verAcuracia = async (id: string) => {
+  const viewAccuracy = async (id: string) => {
     const r = await window.backendAPI.standardAccuracy(id)
-    if (r.ok) setAcuracia((a) => ({ ...a, [id]: r.data }))
-    else setErro(r.error)
+    if (r.ok) setAccuracy((a) => ({ ...a, [id]: r.data }))
+    else setError(r.error)
   }
 
-  const setStep = (i: number, campo: keyof InvestigationStep, valor: string | boolean) => {
+  const setStep = (i: number, field: keyof InvestigationStep, value: string | boolean) => {
     setForm((f) => ({
       ...f,
       investigationSteps: f.investigationSteps.map((s, idx) =>
-        idx === i ? { ...s, [campo]: valor } : s,
+        idx === i ? { ...s, [field]: value } : s,
       ),
     }))
   }
 
   return (
-    <div className="padroes">
-      <form className="config-secao" onSubmit={salvar}>
-        <h2>{editandoId ? 'Editar padrão' : 'Novo padrão'}</h2>
+    <div className="standards">
+      <form className="config-section" onSubmit={save}>
+        <h2>{editingId ? 'Edit standard' : 'New standard'}</h2>
         <label>
-          Nome *
+          Name *
           <input
             required
             value={form.standardName}
@@ -137,7 +137,7 @@ export default function PadroesPanel({ onMudou }: PadroesPanelProps = {}) {
           />
         </label>
         <label>
-          Erro/sintoma
+          Error/symptom
           <textarea
             rows={2}
             value={form.text}
@@ -145,16 +145,16 @@ export default function PadroesPanel({ onMudou }: PadroesPanelProps = {}) {
           />
         </label>
         <label>
-          Solução
+          Solution
           <textarea
             rows={2}
             value={form.result}
             onChange={(e) => setForm((f) => ({ ...f, result: e.target.value }))}
           />
         </label>
-        <div className="linha">
+        <div className="row">
           <label>
-            Tipo
+            Type
             <select
               value={form.incidentType}
               onChange={(e) =>
@@ -166,7 +166,7 @@ export default function PadroesPanel({ onMudou }: PadroesPanelProps = {}) {
             </select>
           </label>
           <label>
-            Rotina
+            Routine
             <input
               type="number"
               value={form.routineNumber}
@@ -177,31 +177,31 @@ export default function PadroesPanel({ onMudou }: PadroesPanelProps = {}) {
 
         <div className="steps">
           <div className="steps-header">
-            <strong>Passos de investigação</strong>
+            <strong>Investigation steps</strong>
             <button
               type="button"
-              className="btn-secundario"
+              className="btn-secondary"
               onClick={() =>
-                setForm((f) => ({ ...f, investigationSteps: [...f.investigationSteps, { ...stepVazio }] }))
+                setForm((f) => ({ ...f, investigationSteps: [...f.investigationSteps, { ...emptyStep }] }))
               }
             >
-              + passo
+              + step
             </button>
           </div>
           {form.investigationSteps.map((s, i) => (
             <div key={i} className="step-item">
               <input
-                placeholder="Hipótese"
+                placeholder="Hypothesis"
                 value={s.hypothesis}
                 onChange={(e) => setStep(i, 'hypothesis', e.target.value)}
               />
               <input
-                placeholder="Consulta"
+                placeholder="Query"
                 value={s.query}
                 onChange={(e) => setStep(i, 'query', e.target.value)}
               />
               <input
-                placeholder="Verificação"
+                placeholder="Verification"
                 value={s.verification}
                 onChange={(e) => setStep(i, 'verification', e.target.value)}
               />
@@ -211,11 +211,11 @@ export default function PadroesPanel({ onMudou }: PadroesPanelProps = {}) {
                   checked={s.confirmed}
                   onChange={(e) => setStep(i, 'confirmed', e.target.checked)}
                 />
-                confirmado
+                confirmed
               </label>
               <button
                 type="button"
-                className="btn-secundario"
+                className="btn-secondary"
                 onClick={() =>
                   setForm((f) => ({
                     ...f,
@@ -223,59 +223,59 @@ export default function PadroesPanel({ onMudou }: PadroesPanelProps = {}) {
                   }))
                 }
               >
-                remover
+                remove
               </button>
             </div>
           ))}
         </div>
 
-        <div className="form-acoes">
-          <button type="submit" disabled={salvando}>
-            {salvando ? 'Salvando...' : editandoId ? 'Salvar alterações' : 'Criar padrão'}
+        <div className="form-actions">
+          <button type="submit" disabled={saving}>
+            {saving ? 'Saving...' : editingId ? 'Save changes' : 'Create standard'}
           </button>
-          {editandoId && (
-            <button type="button" className="btn-secundario" onClick={resetForm}>
-              Cancelar
+          {editingId && (
+            <button type="button" className="btn-secondary" onClick={resetForm}>
+              Cancel
             </button>
           )}
         </div>
-        {erro && <p className="aviso aviso-erro">{erro}</p>}
+        {error && <p className="notice notice-error">{error}</p>}
       </form>
 
-      <div className="painel-topo">
-        <h2>Padrões cadastrados</h2>
-        <button type="button" onClick={carregar} disabled={carregando}>
-          {carregando ? '...' : '↻'}
+      <div className="panel-top">
+        <h2>Registered standards</h2>
+        <button type="button" onClick={load} disabled={loading}>
+          {loading ? '...' : '↻'}
         </button>
       </div>
 
-      {padroes.length === 0 && !carregando && (
-        <p className="painel-vazio">Nenhum padrão cadastrado.</p>
+      {standards.length === 0 && !loading && (
+        <p className="panel-empty">No standard registered.</p>
       )}
 
-      <div className="lista-cards">
-        {padroes.map((p) => (
+      <div className="card-list">
+        {standards.map((p) => (
           <div key={p.id} className="item-card">
             <div className="item-card-header">
               <strong>{p.standardName}</strong>
-              {p.routineNumber != null && <span className="tag">Rotina {p.routineNumber}</span>}
+              {p.routineNumber != null && <span className="tag">Routine {p.routineNumber}</span>}
             </div>
-            {p.result && <p className="item-card-titulo">{p.result}</p>}
-            {acuracia[p.id] && (
+            {p.result && <p className="item-card-title">{p.result}</p>}
+            {accuracy[p.id] && (
               <p className="config-status">
-                Acurácia: {(acuracia[p.id].accuracyRate * 100).toFixed(0)}% (
-                {acuracia[p.id].resolvedCount}/{acuracia[p.id].totalFeedbacks})
+                Accuracy: {(accuracy[p.id].accuracyRate * 100).toFixed(0)}% (
+                {accuracy[p.id].resolvedCount}/{accuracy[p.id].totalFeedbacks})
               </p>
             )}
-            <div className="item-card-acoes">
-              <button type="button" onClick={() => editar(p)}>
-                Editar
+            <div className="item-card-actions">
+              <button type="button" onClick={() => edit(p)}>
+                Edit
               </button>
-              <button type="button" onClick={() => verAcuracia(p.id)}>
-                Acurácia
+              <button type="button" onClick={() => viewAccuracy(p.id)}>
+                Accuracy
               </button>
-              <button type="button" className="btn-perigo" onClick={() => excluir(p.id)}>
-                Excluir
+              <button type="button" className="btn-danger" onClick={() => remove(p.id)}>
+                Delete
               </button>
             </div>
           </div>

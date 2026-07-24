@@ -5,79 +5,82 @@
 <h1 align="center">knowledgeSupport — Desktop</h1>
 
 <p align="center">
-  App de desktop (Electron + React + TypeScript) que funciona como base de conhecimento
-  de suporte técnico: uma bolha flutuante, centralizada na tela, para consultar chamados,
-  registrar padrões de solução e falar com a <strong>knowledgeSupport-api</strong>.
+  Desktop app (Electron + React + TypeScript) that works as a technical support knowledge
+  base: a floating, screen-centered bubble for looking up tickets, registering solution
+  standards, and talking to the <strong>knowledgeSupport-api</strong>.
 </p>
 
-## Visão geral
+## Overview
 
-O app fica como uma pequena bolha preta flutuante com um ícone de headset — arrastável para
-qualquer canto da tela. Ao clicar, ela abre a janela principal: sidebar de navegação, área de
-conteúdo e um painel lateral com o status da conexão e o detalhe do chamado selecionado.
+The app sits as a small floating black bubble with a headset icon — draggable to any corner of
+the screen. Clicking it opens the main window: a navigation sidebar, a content area and a side
+panel with connection status and the selected ticket's detail.
 
-Os chamados vêm do Jira em tempo real através da API; os padrões (erros conhecidos e suas
-soluções) são persistidos no backend; e a análise cruza um com o outro para sugerir a
-resolução mais provável.
+Tickets come from Jira in real time through the API; standards (known errors and their
+solutions) are persisted in the backend; and the analysis cross-references one against the
+other to suggest the most likely resolution.
 
-![Arquitetura](docs/assets/architecture.svg)
+![Architecture](docs/assets/architecture.svg)
 
-## Funcionalidades
+## Features
 
-- **Home** — dashboard com o resumo: chamados abertos, padrões cadastrados, chamados sem
-  padrão e a rotina com maior lacuna.
-- **Chamados** — lista os chamados abertos vindos do Jira, analisa cada um contra os
-  padrões cadastrados e permite registrar feedback (resolveu ou não).
-- **Padrões** — CRUD da base de conhecimento (erro, solução, passos de investigação) e taxa
-  de acurácia por padrão, alimentada pelo feedback real.
-- **Lacunas** — relatório de onde cadastrar um novo padrão cobriria mais chamados.
-- **Configurações** — conexão com a API (URL + `X-API-KEY`) e o **token do Jira**: renove o
-  token pela interface quando ele expirar, sem editar o `.env` da API nem reiniciar o servidor.
+- **Home** — dashboard with the summary (open tickets, registered standards, tickets without a
+  standard, and the routine with the biggest gap) and created-vs-resolved ticket charts: one
+  covering the whole period, another filterable by date and assignee (daily/weekly/monthly).
+- **Tickets** — lists tickets coming from Jira (with an open/closed/all filter, search, and
+  status/type/category filters), analyzes each one against the registered standards, and lets
+  you record feedback (resolved or not).
+- **Standards** — knowledge-base CRUD (error, solution, investigation steps) and an accuracy
+  rate per standard, fed by real feedback.
+- **Gaps** — report of where registering a new standard would cover the most tickets.
+- **Settings** — API connection (URL + `X-API-KEY`) and the **Jira token**: renew the token
+  through the interface when it expires, without editing the API's `.env` or restarting the
+  server.
 
-## Pré-requisitos
+## Requirements
 
-- Node.js 18+ e npm
-- A [knowledgeSupport-api](../demo) rodando (por padrão em `http://localhost:8080`)
+- Node.js 18+ and npm
+- [knowledgeSupport-api](../demo) running (by default at `http://localhost:8080`)
 
-## Rodando em desenvolvimento
+## Running in development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Clique na bolha para abrir o app. Na primeira execução, vá em **Configurações** e informe a
-URL da API e a `X-API-KEY`. Em seguida, ainda em Configurações, preencha os dados do Jira
-(URL base, e-mail, token e JQL).
+Click the bubble to open the app. On first run, go to **Settings** and enter the API URL and
+the `X-API-KEY`. Then, still in Settings, fill in the Jira details (base URL, email, token and
+JQL).
 
-## Build / empacotamento
+## Build / packaging
 
 ```bash
 npm run build
 ```
 
-Gera o executável via `electron-builder` em `release/<versão>/` (NSIS no Windows, DMG no
-macOS, AppImage no Linux). O ícone do app fica em `build/icon.png`.
+Generates the installer via `electron-builder` in `release/<version>/` (NSIS on Windows, DMG on
+macOS, AppImage on Linux). The app icon lives in `build/icon.png`.
 
-## Configuração
+## Configuration
 
-O app não guarda segredos no código. Há duas camadas de configuração:
+The app doesn't store secrets in code. There are two configuration layers:
 
-1. **Desktop** — a URL da API e a `X-API-KEY` ficam em `config.json` no diretório de dados do
-   usuário (gravado pelo processo `main`; o renderer nunca vê a chave).
-2. **Jira** — URL base, e-mail, token e JQL são gerenciados pela API via
-   `GET`/`PUT /api/settings/jira`. O token nunca é exposto de volta pela interface — o painel
-   mostra apenas se há um token configurado.
+1. **Desktop** — the API URL and the `X-API-KEY` live in `config.json` in the user's data
+   directory (written by the `main` process; the renderer never sees the key).
+2. **Jira** — base URL, email, token and JQL are managed by the API via
+   `GET`/`PUT /api/settings/jira`. The token is never exposed back through the interface — the
+   panel only shows whether one is configured.
 
-## Arquitetura
+## Architecture
 
-Três camadas isoladas por processo: o **renderer** (React) só conhece `window.backendAPI`,
-exposto pelo **preload** via `contextBridge`; o **main** (Node) concentra o HTTP e a chave da
-API em `apiClient.ts` — sem CORS e sem vazar segredos para a UI. Detalhes em
+Three process-isolated layers: the **renderer** (React) only knows `window.backendAPI`,
+exposed by **preload** via `contextBridge`; **main** (Node) concentrates the HTTP and the API
+key in `apiClient.ts` — no CORS and no secret leakage to the UI. Details in
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## Versionamento
+## Versioning
 
-[SemVer](https://semver.org/lang/pt-BR/) via [Conventional Commits](https://www.conventionalcommits.org/),
-automatizado pelo [Release Please](https://github.com/googleapis/release-please). O histórico
-fica em [`CHANGELOG.md`](CHANGELOG.md).
+[SemVer](https://semver.org/) via [Conventional Commits](https://www.conventionalcommits.org/),
+automated by [Release Please](https://github.com/googleapis/release-please). History lives in
+[`CHANGELOG.md`](CHANGELOG.md).

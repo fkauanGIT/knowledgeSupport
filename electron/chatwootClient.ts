@@ -1,10 +1,10 @@
-// Cliente do Chatwoot — integração à parte da knowledgeSupport-api, com sua própria
-// URL/conta/token. Chatwoot não tem "webhook de entrada" genérico; envio de mensagem
-// é via API mesmo (account_id + conversation_id), então o conversation_id ainda
-// precisa ser informado manualmente até existir um mapeamento chamado↔conversa.
+// Chatwoot client — a separate integration from knowledgeSupport-api, with its own
+// URL/account/token. Chatwoot has no generic "inbound webhook"; sending a message
+// goes through its API too (account_id + conversation_id), so conversation_id still
+// has to be entered manually until a ticket<->conversation mapping exists.
 
 import { ipcMain } from 'electron'
-import { extrairErro, readConfig, type ApiResult } from './apiClient'
+import { extractErrorMessage, readConfig, type ApiResult } from './apiClient'
 
 async function sendChatwootMessage(
   conversationId: string,
@@ -15,7 +15,7 @@ async function sendChatwootMessage(
     return {
       ok: false,
       status: 0,
-      error: 'Chatwoot não configurado — preencha URL, account ID e token em Configurações.',
+      error: 'Chatwoot not configured — fill in URL, account ID and token in Settings.',
     }
   }
   try {
@@ -32,21 +32,21 @@ async function sendChatwootMessage(
       },
     )
     if (!response.ok) {
-      return { ok: false, status: response.status, error: await extrairErro(response) }
+      return { ok: false, status: response.status, error: await extractErrorMessage(response) }
     }
     return { ok: true, data: await response.json() }
   } catch (e) {
     return {
       ok: false,
       status: 0,
-      error: `Não foi possível falar com o Chatwoot em ${config.chatwootUrl} (${e instanceof Error ? e.message : e})`,
+      error: `Could not reach Chatwoot at ${config.chatwootUrl} (${e instanceof Error ? e.message : e})`,
     }
   }
 }
 
-/** Registra os canais IPC do Chatwoot. Chamar uma vez no boot. */
+/** Registers the Chatwoot IPC channels. Call once at boot. */
 export function registerChatwootHandlers() {
-  // Envio manual de mensagem — conversation_id ainda é informado na hora
+  // Manual message send — conversation_id is still entered at send time
   ipcMain.handle('chatwoot:sendMessage', (_e, conversationId: string, content: string) =>
     sendChatwootMessage(conversationId, content))
 }
