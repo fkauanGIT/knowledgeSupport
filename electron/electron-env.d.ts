@@ -31,5 +31,6 @@ interface Window {
     quit: () => void
     fullscreen: () => void
     restore: () => void
+    getVersion: () => Promise<string>
   }
 }

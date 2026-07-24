@@ -1,5 +1,5 @@
 import { ipcRenderer, contextBridge } from 'electron'
-import type { AppConfig } from '../src/api/types'
+import type { AppConfig, CalledFilter } from '../src/api/types'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -31,10 +31,11 @@ contextBridge.exposeInMainWorld('bubbleAPI', {
   quit: () => ipcRenderer.send('bubble:quit'),
   fullscreen: () => ipcRenderer.send('bubble:fullscreen'),
   restore: () => ipcRenderer.send('bubble:restore'),
+  getVersion: () => ipcRenderer.invoke('bubble:getVersion') as Promise<string>,
 })
 
-// Ponte com a knowledgeSupport-api (o HTTP acontece no processo main;
-// o renderer nunca vê a API key — só resultados { ok, data | error }).
+// Bridge to knowledgeSupport-api (HTTP happens in the main process;
+// the renderer never sees the API key — only { ok, data | error } results).
 contextBridge.exposeInMainWorld('backendAPI', {
   getConfig: () => ipcRenderer.invoke('config:get'),
   setConfig: (patch: Partial<AppConfig>) => ipcRenderer.invoke('config:set', patch),
@@ -42,7 +43,7 @@ contextBridge.exposeInMainWorld('backendAPI', {
   getJiraSettings: () => ipcRenderer.invoke('api:settings:jira:get'),
   setJiraSettings: (body: unknown) => ipcRenderer.invoke('api:settings:jira:set', body),
 
-  listCalleds: () => ipcRenderer.invoke('api:calleds:list'),
+  listCalleds: (filter?: CalledFilter) => ipcRenderer.invoke('api:calleds:list', filter),
   analyzeCalled: (key: string) => ipcRenderer.invoke('api:calleds:analysis', key),
   sendFeedback: (key: string, body: { standardId: string; resolved: boolean }) =>
     ipcRenderer.invoke('api:calleds:feedback', key, body),
@@ -51,16 +52,14 @@ contextBridge.exposeInMainWorld('backendAPI', {
   sendChatwootMessage: (conversationId: string, content: string) =>
     ipcRenderer.invoke('chatwoot:sendMessage', conversationId, content),
 
-  selecionarArquivosDoc: () => ipcRenderer.invoke('docs:selectFiles'),
-  uploadDocumento: (caminho: string) => ipcRenderer.invoke('api:documentacao:upload', caminho),
-  listarDocumentos: () => ipcRenderer.invoke('api:documentacao:list'),
-  removerDocumento: (id: string) => ipcRenderer.invoke('api:documentacao:delete', id),
-  obterTrechosDocumento: (docId: string) =>
-    ipcRenderer.invoke('api:documentacao:trechos', docId),
-  chamadosRelacionadosDocumento: (docId: string) =>
-    ipcRenderer.invoke('api:documentacao:chamadosRelacionados', docId),
-  buscarNaDocumentacao: (consulta: string) =>
-    ipcRenderer.invoke('api:documentacao:buscar', consulta),
+  selectDocFiles: () => ipcRenderer.invoke('docs:selectFiles'),
+  uploadDocument: (filePath: string) => ipcRenderer.invoke('api:documents:upload', filePath),
+  listDocuments: () => ipcRenderer.invoke('api:documents:list'),
+  removeDocument: (id: string) => ipcRenderer.invoke('api:documents:delete', id),
+  getDocumentChunks: (docId: string) => ipcRenderer.invoke('api:documents:chunks', docId),
+  relatedCalledsForDocument: (docId: string) =>
+    ipcRenderer.invoke('api:documents:relatedCalleds', docId),
+  searchDocumentation: (query: string) => ipcRenderer.invoke('api:documents:search', query),
 
   listStandards: () => ipcRenderer.invoke('api:standards:list'),
   getStandard: (id: string) => ipcRenderer.invoke('api:standards:get', id),

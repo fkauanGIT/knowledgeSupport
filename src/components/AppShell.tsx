@@ -1,79 +1,84 @@
-import type { ReactNode } from 'react'
-import { NAV, type Secao } from '../navegacao'
+import { useEffect, useState, type ReactNode } from 'react'
+import { NAV, type Section } from '../navigation'
 
 interface AppShellProps {
-  secao: Secao
-  onNavegar: (secao: Secao) => void
-  onMinimizar: () => void
-  onFechar: () => void
-  telaCheia: boolean
-  onAlternarTelaCheia: () => void
-  painel: ReactNode
+  section: Section
+  onNavigate: (section: Section) => void
+  onMinimize: () => void
+  onClose: () => void
+  fullscreen: boolean
+  onToggleFullscreen: () => void
+  panel: ReactNode
   children: ReactNode
 }
 
 export default function AppShell({
-  secao,
-  onNavegar,
-  onMinimizar,
-  onFechar,
-  telaCheia,
-  onAlternarTelaCheia,
-  painel,
+  section,
+  onNavigate,
+  onMinimize,
+  onClose,
+  fullscreen,
+  onToggleFullscreen,
+  panel,
   children,
 }: AppShellProps) {
-  const atual = NAV.find((item) => item.id === secao) ?? NAV[0]
+  const current = NAV.find((item) => item.id === section) ?? NAV[0]
+
+  const [version, setVersion] = useState('')
+  useEffect(() => {
+    window.bubbleAPI.getVersion().then(setVersion)
+  }, [])
 
   return (
     <div className="app">
       <header className="app-topbar">
-        <div className="app-marca">
-          <span className="app-marca-icone">🎧</span>
+        <div className="app-brand">
+          <span className="app-brand-icon">🎧</span>
           knowledgeSupport
         </div>
 
-        <div className="app-janela-botoes">
-          <button type="button" onClick={onMinimizar} title="Minimizar para a bolha">
+        <div className="app-window-buttons">
+          <button type="button" onClick={onMinimize} title="Minimize to the bubble">
             –
           </button>
           <button
             type="button"
-            onClick={onAlternarTelaCheia}
-            title={telaCheia ? 'Sair da tela cheia' : 'Tela cheia'}
+            onClick={onToggleFullscreen}
+            title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           >
-            {telaCheia ? '🗗' : '⛶'}
+            {fullscreen ? '🗗' : '⛶'}
           </button>
-          <button type="button" className="btn-fechar" onClick={onFechar} title="Fechar aplicativo">
+          <button type="button" className="btn-close" onClick={onClose} title="Close app">
             ×
           </button>
         </div>
       </header>
 
-      <div className="app-corpo">
+      <div className="app-body">
         <aside className="app-sidebar">
-          <div className="sidebar-titulo">Menu</div>
+          <div className="sidebar-title">Menu</div>
           {NAV.map((item) => (
             <button
               key={item.id}
               type="button"
-              className={`sidebar-item ${item.id === secao ? 'ativo' : ''}`}
-              onClick={() => onNavegar(item.id)}
+              className={`sidebar-item ${item.id === section ? 'active' : ''}`}
+              onClick={() => onNavigate(item.id)}
             >
-              {item.titulo}
+              {item.title}
             </button>
           ))}
-          <div className="sidebar-rodape">knowledgeSupport · v1.0.0</div>
+          <div className="sidebar-footer">knowledgeSupport{version ? ` · v${version}` : ''}</div>
         </aside>
 
         <main className="app-main">
-          <div className="main-cabecalho">
-            <h1>{atual.titulo}</h1>
-            <p>{atual.subtitulo}</p>
+          <div className="main-header">
+            <h1>{current.title}</h1>
+            <p>{current.subtitle}</p>
           </div>
-          <div className="main-conteudo">{children}</div>
+          <div className="main-content">{children}</div>
         </main>
 
-        <aside className="app-painel">{painel}</aside>
+        <aside className="app-panel">{panel}</aside>
       </div>
     </div>
   )

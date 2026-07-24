@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { registerApiHandlers } from './apiClient'
 import { registerChatwootHandlers } from './chatwootClient'
-import { registerDocumentacaoHandlers } from './documentacaoClient'
+import { registerDocumentHandlers } from './documentClient'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -15,12 +15,12 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
-// Integração com a knowledgeSupport-api (config persistida + todas as rotas)
+// Integration with knowledgeSupport-api (persisted config + all routes)
 registerApiHandlers()
 registerChatwootHandlers()
-registerDocumentacaoHandlers()
+registerDocumentHandlers()
 
-// Dimensões da bolha (lançador) e da janela do app
+// Bubble (launcher) and app window dimensions
 const BUBBLE_SIZE = 64
 const APP_WIDTH = 1100
 const APP_HEIGHT = 700
@@ -28,7 +28,7 @@ const APP_HEIGHT = 700
 let win: BrowserWindow | null
 let boundsBeforeFullscreen: Electron.Rectangle | null = null
 
-/** Mantém uma janela (x, y, width, height) inteiramente dentro da área útil da tela. */
+/** Keeps a window (x, y, width, height) entirely inside the screen's work area. */
 function clampToWorkArea(x: number, y: number, width: number, height: number) {
   const { workArea } = screen.getPrimaryDisplay()
   width = Math.min(width, workArea.width)
@@ -38,7 +38,7 @@ function clampToWorkArea(x: number, y: number, width: number, height: number) {
   return { x: clampedX, y: clampedY, width, height }
 }
 
-/** Bounds que deixam uma janela de (width × height) centralizada na tela. */
+/** Bounds that leave a (width × height) window centered on screen. */
 function centeredBounds(width: number, height: number) {
   const { workArea } = screen.getPrimaryDisplay()
   width = Math.min(width, workArea.width)
@@ -49,7 +49,7 @@ function centeredBounds(width: number, height: number) {
 }
 
 function createWindow() {
-  // Janela nasce CENTRALIZADA na tela (antes: canto inferior direito)
+  // The window is born CENTERED on screen (before: bottom-right corner)
   const bounds = centeredBounds(BUBBLE_SIZE, BUBBLE_SIZE)
 
   win = new BrowserWindow({
@@ -74,7 +74,7 @@ function createWindow() {
   }
 }
 
-/** Redimensiona mantendo a janela ancorada no seu centro atual, sem sair da tela. */
+/** Resizes while keeping the window anchored on its current center, without leaving the screen. */
 function resizeAnchored(width: number, height: number) {
   if (!win) return
   const b = win.getBounds()
@@ -92,7 +92,7 @@ function resizeAnchored(width: number, height: number) {
 ipcMain.on('bubble:expand', () => resizeAnchored(APP_WIDTH, APP_HEIGHT))
 ipcMain.on('bubble:collapse', () => resizeAnchored(BUBBLE_SIZE, BUBBLE_SIZE))
 
-/** Expande a janela para ocupar toda a área útil da tela onde ela está. */
+/** Expands the window to fill the whole work area of the screen it's on. */
 ipcMain.on('bubble:fullscreen', () => {
   if (!win) return
   boundsBeforeFullscreen = win.getBounds()
@@ -100,7 +100,7 @@ ipcMain.on('bubble:fullscreen', () => {
   win.setBounds(workArea)
 })
 
-/** Volta do modo tela cheia para o tamanho/posição anterior (ou o padrão do app). */
+/** Returns from fullscreen mode to the previous size/position (or the app's default). */
 ipcMain.on('bubble:restore', () => {
   if (!win) return
   if (boundsBeforeFullscreen) {
@@ -112,7 +112,7 @@ ipcMain.on('bubble:restore', () => {
   }
 })
 
-// Arrasto da bolinha: o renderer manda o delta do mouse, o main move a janela (com clamp).
+// Bubble drag: the renderer sends the mouse delta, main moves the window (with clamp).
 ipcMain.on('bubble:moveBy', (_event, dx: number, dy: number) => {
   if (!win) return
   const b = win.getBounds()
@@ -121,6 +121,10 @@ ipcMain.on('bubble:moveBy', (_event, dx: number, dy: number) => {
 })
 
 ipcMain.on('bubble:quit', () => app.quit())
+
+// App version (package.json via Electron) — avoids hardcoding it in the renderer, which
+// used to go stale on every automated release (Release Please).
+ipcMain.handle('bubble:getVersion', () => app.getVersion())
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
