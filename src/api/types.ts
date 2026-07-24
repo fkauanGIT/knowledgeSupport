@@ -1,5 +1,5 @@
-// Tipos espelhando os DTOs da knowledgeSupport-api (fonte: /v3/api-docs).
-// Se a API mudar um contrato, este arquivo é o ÚNICO lugar de tipos a atualizar.
+// Types mirroring the knowledgeSupport-api DTOs (source: /v3/api-docs).
+// If the API changes a contract, this is the ONLY types file to update.
 
 export type IncidentType = 'ALERT' | 'ERROR'
 export type FilterCategory = 'SUPPORT' | 'INFRASTRUCTURE' | 'DEVELOPMENT' | 'PENDING'
@@ -8,11 +8,22 @@ export type Confidence = 'CONFIRMED' | 'LIKELY' | 'UNCERTAIN' | 'NONE'
 export interface AppConfig {
   apiUrl: string
   apiKey: string
+  chatwootUrl: string
+  chatwootAccountId: string
+  chatwootToken: string
+}
+
+// ---------- Chatwoot (separate integration from knowledgeSupport-api) ----------
+
+/** Chatwoot API response when creating a message — only the fields we use. */
+export interface ChatwootMessageResponse {
+  id: number
+  content: string
 }
 
 // ---------- Jira settings (GET/PUT /api/settings/jira) ----------
 
-/** Config do Jira retornada pela API. O token nunca vem — só se está configurado. */
+/** Jira config returned by the API. The token never comes back — only whether it's set. */
 export interface JiraSettings {
   baseUrl: string
   email: string
@@ -20,7 +31,7 @@ export interface JiraSettings {
   tokenConfigured: boolean
 }
 
-/** Corpo do PUT. Campos em branco preservam o valor atual; token opcional. */
+/** PUT body. Blank fields preserve the current value; token is optional. */
 export interface JiraSettingsInput {
   baseUrl: string
   email: string
@@ -69,6 +80,14 @@ export interface StandardAccuracyResponse {
 
 // ---------- Calleds ----------
 
+/** Filters accepted by GET /api/calleds — become query params, all optional. */
+export interface CalledFilter {
+  createdFrom?: string
+  createdTo?: string
+  onlyOpen?: boolean
+  assignee?: string
+}
+
 export interface CalledResponse {
   jiraKey: string
   titleCalled: string
@@ -79,9 +98,11 @@ export interface CalledResponse {
   filterCategory: FilterCategory
   status: string | null
   requesterName: string | null
+  assigneeName: string | null
   createdAt: string
   deadline: string | null
   updateAt: string
+  resolvedAt: string | null
 }
 
 export interface CalledAnalysisResponse {
@@ -91,7 +112,7 @@ export interface CalledAnalysisResponse {
   method: string
   score: number
   confidence: Confidence
-  /** Ainda não exposto pela API — necessário para o feedback. Ver pendências no README. */
+  /** Not exposed by the API yet — needed for feedback. See open items in the README. */
   standardId?: string
 }
 
@@ -114,4 +135,34 @@ export interface GapReportResponse {
   totalCalledsAnalyzed: number
   totalWithoutMatch: number
   gapsByRoutine: RoutineGapResponse[]
+}
+
+// ---------- Documentation (indexing and search in knowledgeSupport-api) ----------
+
+export interface DocumentMeta {
+  id: string
+  name: string
+  type: 'pdf' | 'docx'
+  totalChunks: number
+  status: 'indexed' | 'failed'
+  error?: string
+  indexedAt: string
+}
+
+export interface FoundChunk {
+  docId: string
+  docName: string
+  page: number | null
+  text: string
+  relevance: number
+}
+
+export interface DocumentChunk {
+  page: number | null
+  text: string
+}
+
+export interface RelatedCalled {
+  key: string
+  relevance: number
 }

@@ -1,71 +1,88 @@
-import { useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import AppShell from './components/AppShell'
 import Dashboard from './components/Dashboard'
-import PainelDireito from './components/PainelDireito'
-import ChamadosApi from './components/ChamadosApi'
-import PadroesPanel from './components/PadroesPanel'
-import LacunasPanel from './components/LacunasPanel'
+import RightPanel from './components/RightPanel'
+import TicketsApi from './components/TicketsApi'
+import StandardsPanel from './components/StandardsPanel'
+import DocumentationPanel from './components/DocumentationPanel'
+import GapsPanel from './components/GapsPanel'
 import ConfigPanel from './components/ConfigPanel'
-import { useResumo } from './hooks/useResumo'
-import type { Secao } from './navegacao'
+import { useSummary } from './hooks/useSummary'
+import type { Section } from './navigation'
 import type { CalledResponse } from './api/types'
 
 function App() {
-  const [aberto, setAberto] = useState(false)
-  const [secao, setSecao] = useState<Secao>('home')
-  const [selecionado, setSelecionado] = useState<CalledResponse | null>(null)
+  const [open, setOpen] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
+  const [section, setSection] = useState<Section>('home')
+  const [selected, setSelected] = useState<CalledResponse | null>(null)
 
-  const { resumo, recarregar } = useResumo()
+  const { summary, reload } = useSummary()
 
-  // Arrasto da bolinha: clique curto abre o app; se mover além do limiar, vira arrasto.
-  const iniciarArrasto = (e: ReactPointerEvent<HTMLButtonElement>) => {
+  // Bubble drag: a short click opens the app; moving past the threshold turns it into a drag.
+  const startDrag = (e: ReactPointerEvent<HTMLButtonElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId)
-    const inicio = { x: e.screenX, y: e.screenY }
-    const ultimo = { ...inicio }
-    let arrastando = false
+    const start = { x: e.screenX, y: e.screenY }
+    const last = { ...start }
+    let dragging = false
 
-    const mover = (ev: PointerEvent) => {
-      const dx = ev.screenX - ultimo.x
-      const dy = ev.screenY - ultimo.y
-      if (!arrastando) {
-        const total = Math.abs(ev.screenX - inicio.x) + Math.abs(ev.screenY - inicio.y)
+    const move = (ev: PointerEvent) => {
+      const dx = ev.screenX - last.x
+      const dy = ev.screenY - last.y
+      if (!dragging) {
+        const total = Math.abs(ev.screenX - start.x) + Math.abs(ev.screenY - start.y)
         if (total <= 4) return
-        arrastando = true
+        dragging = true
       }
       window.bubbleAPI.moveBy(dx, dy)
-      ultimo.x = ev.screenX
-      ultimo.y = ev.screenY
+      last.x = ev.screenX
+      last.y = ev.screenY
     }
 
-    const soltar = () => {
-      window.removeEventListener('pointermove', mover)
-      window.removeEventListener('pointerup', soltar)
-      if (!arrastando) {
-        setAberto(true)
+    const release = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', release)
+      if (!dragging) {
+        setOpen(true)
         window.bubbleAPI.expand()
       }
     }
 
-    window.addEventListener('pointermove', mover)
-    window.addEventListener('pointerup', soltar)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', release)
   }
 
-  const minimizar = () => {
-    setAberto(false)
+  const minimize = () => {
+    setOpen(false)
+    setFullscreen(false)
     window.bubbleAPI.collapse()
   }
 
-  const navegar = (proxima: Secao) => {
-    setSecao(proxima)
-    if (proxima !== 'chamados') setSelecionado(null)
+  const toggleFullscreen = () => {
+    if (fullscreen) {
+      window.bubbleAPI.restore()
+    } else {
+      window.bubbleAPI.fullscreen()
+    }
+    setFullscreen(!fullscreen)
   }
 
-  if (!aberto) {
+  // Panels stay mounted at all times (visibility via CSS) instead of entering/leaving the DOM on
+  // every navigation — avoids refetching each screen and losing local filters (e.g. Tickets)
+  // every time the user switches tabs and comes back.
+  const sectionStyle = (s: Section): CSSProperties => ({ display: section === s ? undefined : 'none' })
+
+  const navigate = (next: Section) => {
+    setSection(next)
+    if (next !== 'tickets') setSelected(null)
+  }
+
+  if (!open) {
     return (
       <button
-        className="bolinha"
-        onPointerDown={iniciarArrasto}
-        title="Arraste para mover • clique para abrir"
+        className="bubble"
+        onPointerDown={startDrag}
+        title="Drag to move • click to open"
       >
         🎧
       </button>
@@ -74,29 +91,43 @@ function App() {
 
   return (
     <AppShell
-      secao={secao}
-      onNavegar={navegar}
-      onMinimizar={minimizar}
-      onFechar={() => window.bubbleAPI.quit()}
-      painel={
-        <PainelDireito resumo={resumo} selecionado={selecionado} onRecarregar={recarregar} />
+      section={section}
+      onNavigate={navigate}
+      onMinimize={minimize}
+      onClose={() => window.bubbleAPI.quit()}
+      fullscreen={fullscreen}
+      onToggleFullscreen={toggleFullscreen}
+      panel={
+        <RightPanel summary={summary} selected={selected} onReload={reload} />
       }
     >
-      {secao === 'home' && <Dashboard resumo={resumo} onNavegar={navegar} />}
+      <div style={sectionStyle('home')}>
+        <Dashboard summary={summary} onNavigate={navigate} />
+      </div>
 
-      {secao === 'chamados' && (
-        <ChamadosApi
-          selecionado={selecionado}
-          onSelecionar={setSelecionado}
-          onMudou={recarregar}
+      <div style={sectionStyle('tickets')}>
+        <TicketsApi
+          selected={selected}
+          onSelect={setSelected}
+          onChange={reload}
         />
-      )}
+      </div>
 
-      {secao === 'padroes' && <PadroesPanel onMudou={recarregar} />}
+      <div style={sectionStyle('standards')}>
+        <StandardsPanel onChange={reload} />
+      </div>
 
-      {secao === 'lacunas' && <LacunasPanel />}
+      <div style={sectionStyle('documentation')}>
+        <DocumentationPanel />
+      </div>
 
-      {secao === 'config' && <ConfigPanel />}
+      <div style={sectionStyle('gaps')}>
+        <GapsPanel />
+      </div>
+
+      <div style={sectionStyle('config')}>
+        <ConfigPanel />
+      </div>
     </AppShell>
   )
 }

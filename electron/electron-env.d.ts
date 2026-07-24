@@ -29,5 +29,8 @@ interface Window {
     collapse: () => void
     moveBy: (dx: number, dy: number) => void
     quit: () => void
+    fullscreen: () => void
+    restore: () => void
+    getVersion: () => Promise<string>
   }
 }

@@ -1,88 +1,92 @@
-import type { Resumo } from '../hooks/useResumo'
-import type { Secao } from '../navegacao'
+import type { Summary } from '../hooks/useSummary'
+import type { Section } from '../navigation'
+import TicketsChart from './TicketsChart'
 
 interface DashboardProps {
-  resumo: Resumo
-  onNavegar: (secao: Secao) => void
+  summary: Summary
+  onNavigate: (section: Section) => void
 }
 
-const numero = (valor: number | null) => (valor === null ? '—' : String(valor))
+const number = (value: number | null) => (value === null ? '—' : String(value))
 
-export default function Dashboard({ resumo, onNavegar }: DashboardProps) {
-  const maiorLacuna = resumo.gap?.gapsByRoutine?.[0] ?? null
+export default function Dashboard({ summary, onNavigate }: DashboardProps) {
+  const biggestGap = summary.gap?.gapsByRoutine?.[0] ?? null
 
   return (
     <div>
-      {resumo.erro && <p className="aviso aviso-erro">{resumo.erro}</p>}
+      {summary.error && <p className="notice notice-error">{summary.error}</p>}
 
       <div className="dash-grid">
-        <div className="dash-card dash-destaque">
-          <h2>Base de conhecimento do suporte</h2>
-          <p>Chamados do Jira, padrões de solução e onde o conhecimento ainda falta.</p>
-          <div className="dash-atalhos">
-            <button type="button" className="dash-atalho" onClick={() => onNavegar('chamados')}>
-              Ver chamados
+        <div className="dash-card dash-highlight">
+          <h2>Support knowledge base</h2>
+          <p>Jira tickets, solution standards, and where the knowledge still falls short.</p>
+          <div className="dash-shortcuts">
+            <button type="button" className="dash-shortcut" onClick={() => onNavigate('tickets')}>
+              View tickets
             </button>
-            <button type="button" className="dash-atalho" onClick={() => onNavegar('padroes')}>
-              Novo padrão
+            <button type="button" className="dash-shortcut" onClick={() => onNavigate('standards')}>
+              New standard
             </button>
           </div>
         </div>
 
         <div className="dash-card">
-          <div className="dash-card-topo">
-            <h3>Chamados abertos</h3>
+          <div className="dash-card-top">
+            <h3>Open tickets</h3>
             <span className="tag">Jira</span>
           </div>
-          <div className="dash-valor">{numero(resumo.chamados)}</div>
-          <p className="dash-legenda">Vindos do Jira em tempo real</p>
+          <div className="dash-value">{number(summary.calleds)}</div>
+          <p className="dash-caption">Live from Jira</p>
         </div>
 
         <div className="dash-card">
-          <div className="dash-card-topo">
-            <h3>Padrões cadastrados</h3>
+          <div className="dash-card-top">
+            <h3>Registered standards</h3>
             <span className="tag">Base</span>
           </div>
-          <div className="dash-valor">{numero(resumo.padroes)}</div>
-          <p className="dash-legenda">Erros conhecidos com solução</p>
+          <div className="dash-value">{number(summary.standards)}</div>
+          <p className="dash-caption">Known errors with a solution</p>
         </div>
 
         <div className="dash-card">
-          <div className="dash-card-topo">
-            <h3>Sem padrão</h3>
-            <span className="tag tag-alerta">Lacunas</span>
+          <div className="dash-card-top">
+            <h3>Without a standard</h3>
+            <span className="tag tag-alert">Gaps</span>
           </div>
-          <div className="dash-valor">{numero(resumo.gap?.totalWithoutMatch ?? null)}</div>
-          <p className="dash-legenda">
-            {resumo.gap
-              ? `de ${resumo.gap.totalCalledsAnalyzed} analisados`
-              : 'sem dados de análise'}
+          <div className="dash-value">{number(summary.gap?.totalWithoutMatch ?? null)}</div>
+          <p className="dash-caption">
+            {summary.gap
+              ? `of ${summary.gap.totalCalledsAnalyzed} analyzed`
+              : 'no analysis data'}
           </p>
         </div>
 
         <div className="dash-card">
-          <div className="dash-card-topo">
-            <h3>Maior lacuna</h3>
-            <span className="tag">Rotina</span>
+          <div className="dash-card-top">
+            <h3>Biggest gap</h3>
+            <span className="tag">Routine</span>
           </div>
-          <div className="dash-valor">
-            {maiorLacuna ? (maiorLacuna.routineNumber ?? '—') : '—'}
+          <div className="dash-value">
+            {biggestGap ? (biggestGap.routineNumber ?? '—') : '—'}
           </div>
-          <p className="dash-legenda">
-            {maiorLacuna
-              ? `${maiorLacuna.count} chamados sem solução registrada`
-              : 'nenhuma lacuna encontrada'}
+          <p className="dash-caption">
+            {biggestGap
+              ? `${biggestGap.count} tickets with no solution registered`
+              : 'no gap found'}
           </p>
         </div>
+
+        <TicketsChart title="Tickets — whole period" />
+        <TicketsChart title="Tickets by period and responsible" filterable />
       </div>
 
-      <h2 className="secao-titulo">Atalhos</h2>
-      <div className="dash-atalhos">
-        <button type="button" className="dash-atalho" onClick={() => onNavegar('lacunas')}>
-          Relatório de lacunas
+      <h2 className="section-title">Shortcuts</h2>
+      <div className="dash-shortcuts">
+        <button type="button" className="dash-shortcut" onClick={() => onNavigate('gaps')}>
+          Gap report
         </button>
-        <button type="button" className="dash-atalho" onClick={() => onNavegar('config')}>
-          Configurações
+        <button type="button" className="dash-shortcut" onClick={() => onNavigate('config')}>
+          Settings
         </button>
       </div>
     </div>

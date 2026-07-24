@@ -1,19 +1,33 @@
-// Cliente da knowledgeSupport-api — roda no processo MAIN do Electron.
-// Por que aqui e não no renderer? Dois motivos:
-// 1. Sem CORS: o main é Node puro, não navegador.
-// 2. A API key nunca entra no renderer — fica no config do app, lida só aqui.
-// É o "adapter de saída" do desktop: o único lugar que conhece HTTP e a chave.
+// knowledgeSupport-api client — runs in the Electron MAIN process.
+// Why here and not in the renderer? Two reasons:
+// 1. No CORS: main is plain Node, not a browser.
+// 2. The API key never enters the renderer — it stays in the app config, read only here.
+// It's the desktop's "outbound adapter": the only place that knows HTTP and the key.
+//
+// Central client — only knowledgeSupport-api (config, Jira, calleds, standards).
+// Chatwoot and Documentation are separate integrations, each in its own module
+// (chatwootClient.ts / documentClient.ts), reusing the `request` function from here.
 
 import { app, ipcMain } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs/promises'
+import type { CalledFilter } from '../src/api/types'
 
 export interface AppConfig {
   apiUrl: string
   apiKey: string
+  chatwootUrl: string
+  chatwootAccountId: string
+  chatwootToken: string
 }
 
-const defaultConfig: AppConfig = { apiUrl: 'http://localhost:8080', apiKey: '' }
+const defaultConfig: AppConfig = {
+  apiUrl: 'http://localhost:8080',
+  apiKey: '',
+  chatwootUrl: '',
+  chatwootAccountId: '',
+  chatwootToken: '',
+}
 
 function configPath() {
   return path.join(app.getPath('userData'), 'config.json')
@@ -28,43 +42,56 @@ export async function readConfig(): Promise<AppConfig> {
   }
 }
 
-export async function writeConfig(config: AppConfig): Promise<AppConfig> {
+/** Merges only the fields sent on top of the current config — each screen saves its own section. */
+export async function writeConfig(patch: Partial<AppConfig>): Promise<AppConfig> {
+  const current = await readConfig()
+  const next = { ...current, ...patch }
   await fs.mkdir(app.getPath('userData'), { recursive: true })
-  await fs.writeFile(configPath(), JSON.stringify(config, null, 2), 'utf-8')
-  return config
+  await fs.writeFile(configPath(), JSON.stringify(next, null, 2), 'utf-8')
+  return next
 }
 
-// Resultado estruturado: o renderer sempre recebe { ok, data | error },
-// nunca uma exceção crua atravessando o IPC.
+// Structured result: the renderer always gets { ok, data | error },
+// never a raw exception crossing the IPC boundary.
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; error: string }
 
-async function request<T>(path_: string, init?: RequestInit): Promise<ApiResult<T>> {
+/** Extracts the error message from the response body (if it's JSON), falling back to the status. */
+export async function extractErrorMessage(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { message?: string; error?: string }
+    return body.message ?? body.error ?? `Error ${response.status}`
+  } catch {
+    return `Error ${response.status}`
+  }
+}
+
+/**
+ * Generic HTTP call to knowledgeSupport-api. Accepts a JSON body (default) or a ready-made
+ * `FormData` (multipart upload) — in that case it doesn't force Content-Type, fetch already
+ * builds the correct boundary on its own.
+ */
+export async function request<T>(path_: string, init?: RequestInit): Promise<ApiResult<T>> {
   const config = await readConfig()
   if (!config.apiKey) {
-    return { ok: false, status: 0, error: 'API key não configurada — abra Configurações.' }
+    return { ok: false, status: 0, error: 'API key not configured — open Settings.' }
   }
   try {
-    // Remove barra(s) no fim da URL base para não gerar "//api/..." (causa comum de 404/405).
+    // Strips trailing slash(es) from the base URL so it doesn't produce "//api/..." (a common 404/405 cause).
     const baseUrl = config.apiUrl.replace(/\/+$/, '')
+    const isFormData = init?.body instanceof FormData
     const response = await fetch(`${baseUrl}${path_}`, {
       ...init,
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         'X-API-KEY': config.apiKey,
         ...init?.headers,
       },
     })
     if (!response.ok) {
-      let message = `Erro ${response.status}`
-      try {
-        const body = (await response.json()) as { message?: string; error?: string }
-        message = body.message ?? body.error ?? message
-      } catch {
-        /* corpo não-JSON */
-      }
-      if (response.status === 401 || response.status === 403) {
-        message = 'Não autorizado — confira a API key em Configurações.'
-      }
+      const message =
+        response.status === 401 || response.status === 403
+          ? 'Unauthorized — check the API key in Settings.'
+          : await extractErrorMessage(response)
       return { ok: false, status: response.status, error: message }
     }
     if (response.status === 204) return { ok: true, data: undefined as T }
@@ -73,37 +100,49 @@ async function request<T>(path_: string, init?: RequestInit): Promise<ApiResult<
     return {
       ok: false,
       status: 0,
-      error: `Não foi possível falar com a API em ${config.apiUrl} — ela está rodando? (${e instanceof Error ? e.message : e})`,
+      error: `Could not reach the API at ${config.apiUrl} — is it running? (${e instanceof Error ? e.message : e})`,
     }
   }
 }
 
-const get = (p: string) => request(p)
-const post = (p: string, body: unknown) =>
+/** Builds a filter's query string, skipping empty/undefined fields. */
+function queryString(params?: object): string {
+  if (!params) return ''
+  const usp = new URLSearchParams()
+  for (const [key, value] of Object.entries(params) as [string, string | number | boolean | undefined][]) {
+    if (value !== undefined && value !== null && value !== '') usp.set(key, String(value))
+  }
+  const qs = usp.toString()
+  return qs ? `?${qs}` : ''
+}
+
+export const get = (p: string) => request(p)
+export const post = (p: string, body: unknown) =>
   request(p, { method: 'POST', body: JSON.stringify(body) })
-const put = (p: string, body: unknown) =>
+export const put = (p: string, body: unknown) =>
   request(p, { method: 'PUT', body: JSON.stringify(body) })
-const del = (p: string) => request(p, { method: 'DELETE' })
+export const del = (p: string) => request(p, { method: 'DELETE' })
 
-/** Registra todos os canais IPC da integração com a API. Chamar uma vez no boot. */
+/** Registers the knowledgeSupport-api IPC channels (config, Jira, calleds, standards). */
 export function registerApiHandlers() {
-  // Configuração do desktop (URL da API + X-API-KEY)
+  // Desktop config (API URL + X-API-KEY + other integrations)
   ipcMain.handle('config:get', () => readConfig())
-  ipcMain.handle('config:set', (_e, config: AppConfig) => writeConfig(config))
+  ipcMain.handle('config:set', (_e, patch: Partial<AppConfig>) => writeConfig(patch))
 
-  // Configuração do Jira (rotação de token em runtime, sem editar .env da API)
+  // Jira config (runtime token rotation, without editing the API's .env)
   ipcMain.handle('api:settings:jira:get', () => get('/api/settings/jira'))
   ipcMain.handle('api:settings:jira:set', (_e, body: unknown) => put('/api/settings/jira', body))
 
-  // Chamados (Jira via API)
-  ipcMain.handle('api:calleds:list', () => get('/api/calleds'))
+  // Calleds (Jira via API)
+  ipcMain.handle('api:calleds:list', (_e, filter?: CalledFilter) =>
+    get(`/api/calleds${queryString(filter)}`))
   ipcMain.handle('api:calleds:analysis', (_e, key: string) =>
     get(`/api/calleds/${encodeURIComponent(key)}/analysis`))
   ipcMain.handle('api:calleds:feedback', (_e, key: string, body: unknown) =>
     post(`/api/calleds/${encodeURIComponent(key)}/feedback`, body))
   ipcMain.handle('api:calleds:gapReport', () => get('/api/calleds/gap-report'))
 
-  // Padrões (base de conhecimento)
+  // Standards (knowledge base)
   ipcMain.handle('api:standards:list', () => get('/api/standards'))
   ipcMain.handle('api:standards:get', (_e, id: string) => get(`/api/standards/${id}`))
   ipcMain.handle('api:standards:create', (_e, body: unknown) => post('/api/standards', body))
