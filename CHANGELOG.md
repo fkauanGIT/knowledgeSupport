@@ -5,6 +5,18 @@ Todas as mudanças relevantes deste projeto são documentadas aqui. O formato se
 [SemVer](https://semver.org/lang/pt-BR/), gerenciado automaticamente pelo
 [Release Please](https://github.com/googleapis/release-please).
 
+## [1.2.0](https://github.com/fkauanGIT/knowledgeSupport/compare/v1.1.0...v1.2.0) (2026-07-24)
+
+
+### Features
+
+* add a fullscreen toggle to the app window ([f7cf3f5](https://github.com/fkauanGIT/knowledgeSupport/commit/f7cf3f5e3042f1a600519b9246f603e1b7c23043))
+* add Home dashboard charts for tickets created vs resolved ([fb91f84](https://github.com/fkauanGIT/knowledgeSupport/commit/fb91f8437a7f94ed0fa54f00be820759c20f2290))
+* add search and status/type/category filters to the Chamados list ([aca0b07](https://github.com/fkauanGIT/knowledgeSupport/commit/aca0b07f394396dc23c4eec263e3a92136d73b13))
+* filter tickets by period, status, and assignee via the API ([c716c1a](https://github.com/fkauanGIT/knowledgeSupport/commit/c716c1a3a11f78f0269ebeb2320ff5563130bef5))
+* index support documentation and surface it during ticket analysis ([d92e326](https://github.com/fkauanGIT/knowledgeSupport/commit/d92e326bc4e745fa3622b2c232b1ed7e63bce62f))
+* send analyzed ticket messages to Chatwoot ([6eda9bd](https://github.com/fkauanGIT/knowledgeSupport/commit/6eda9bd97f1cf6add6ccb30ccf5f4520ed5940fe))
+
 ## [1.1.0](https://github.com/fkauanGIT/knowledgeSupport/compare/v1.0.0...v1.1.0) (2026-07-17)
 
 
